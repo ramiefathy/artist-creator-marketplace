@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/reviews.schema.json",
+  "title": "reviews/{reviewId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reviewId","contractId","fromUid","toUid","fromRole","rating","text","createdAt"],
+  "properties": {
+    "reviewId": { "type": "string", "minLength": 1 },
+    "contractId": { "type": "string", "minLength": 1 },
+    "fromUid": { "type": "string", "minLength": 1 },
+    "toUid": { "type": "string", "minLength": 1 },
+    "fromRole": { "type": "string", "enum": ["artist","creator"] },
+    "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "text": { "type": ["string","null"], "maxLength": 1000 },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

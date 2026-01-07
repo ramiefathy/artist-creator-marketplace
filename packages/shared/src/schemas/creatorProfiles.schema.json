@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/creatorProfiles.schema.json",
+  "title": "creatorProfiles/{uid}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["uid","displayName","bio","niches","platformHandles","audienceCountries","metricsSelfReported","verificationStatus","ratingAvg","ratingCount","createdAt","updatedAt"],
+  "properties": {
+    "uid": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 3, "maxLength": 60 },
+    "bio": { "type": ["string","null"], "maxLength": 500 },
+    "niches": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": { "type": "string", "minLength": 2, "maxLength": 32 }
+    },
+    "platformHandles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tiktok","instagram","youtube"],
+      "properties": {
+        "tiktok": { "type": ["string","null"], "maxLength": 64 },
+        "instagram": { "type": ["string","null"], "maxLength": 64 },
+        "youtube": { "type": ["string","null"], "maxLength": 128 }
+      }
+    },
+    "audienceCountries": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "pattern": "^[A-Z]{2}$" }
+    },
+    "metricsSelfReported": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tiktokFollowers","tiktokAvgViews",
+        "instagramFollowers","instagramAvgViews",
+        "youtubeSubscribers","youtubeAvgViews"
+      ],
+      "properties": {
+        "tiktokFollowers": { "type": "integer", "minimum": 0 },
+        "tiktokAvgViews": { "type": "integer", "minimum": 0 },
+        "instagramFollowers": { "type": "integer", "minimum": 0 },
+        "instagramAvgViews": { "type": "integer", "minimum": 0 },
+        "youtubeSubscribers": { "type": "integer", "minimum": 0 },
+        "youtubeAvgViews": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "verificationStatus": { "type": "string", "enum": ["unverified","pending","verified","rejected"] },
+    "ratingAvg": { "type": "number", "minimum": 0, "maximum": 5 },
+    "ratingCount": { "type": "integer", "minimum": 0 },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

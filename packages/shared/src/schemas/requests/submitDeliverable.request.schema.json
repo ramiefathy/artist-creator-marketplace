@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/submitDeliverable.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deliverableId",
+    "postUrl",
+    "creatorNotes",
+    "compliance",
+    "metrics24h"
+  ],
+  "properties": {
+    "deliverableId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "postUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "creatorNotes": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disclosureConfirmed",
+        "licenseConfirmed",
+        "postLiveDaysConfirmed"
+      ],
+      "properties": {
+        "disclosureConfirmed": {
+          "type": "boolean",
+          "const": true
+        },
+        "licenseConfirmed": {
+          "type": "boolean",
+          "const": true
+        },
+        "postLiveDaysConfirmed": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    },
+    "metrics24h": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "views",
+        "likes",
+        "comments",
+        "shares",
+        "saves"
+      ],
+      "properties": {
+        "views": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "likes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "comments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shares": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "saves": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

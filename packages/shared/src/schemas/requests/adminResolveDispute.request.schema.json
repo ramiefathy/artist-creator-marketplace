@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/adminResolveDispute.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disputeId",
+    "outcome",
+    "refundCents",
+    "notes"
+  ],
+  "properties": {
+    "disputeId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "resolved_refund",
+        "resolved_no_refund",
+        "resolved_partial_refund"
+      ]
+    },
+    "refundCents": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 500000
+    },
+    "notes": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    }
+  }
+}

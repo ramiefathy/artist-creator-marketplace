@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/notifications.schema.json",
+  "title": "notifications/{notificationId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["notificationId","toUid","type","title","body","link","read","createdAt"],
+  "properties": {
+    "notificationId": { "type": "string", "minLength": 1 },
+    "toUid": { "type": "string", "minLength": 1 },
+    "type": {
+      "type": "string",
+      "enum": [
+        "offer_submitted","offer_accepted","offer_rejected","payment_received",
+        "deliverable_submitted","deliverable_approved","deliverable_revision","deliverable_rejected",
+        "dispute_opened","dispute_resolved","payout_sent",
+        "verification_requested","verification_decision",
+        "admin_message"
+      ]
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "body": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "link": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "read": { "type": "boolean" },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

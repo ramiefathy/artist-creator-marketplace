@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/sendMessage.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "threadId",
+    "text"
+  ],
+  "properties": {
+    "threadId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    }
+  }
+}

@@ -1,0 +1,17 @@
+export type NotificationType =
+  | 'offer_submitted'
+  | 'offer_accepted'
+  | 'offer_rejected'
+  | 'payment_received'
+  | 'message'
+  | 'contract_cancelled'
+  | 'deliverable_submitted'
+  | 'deliverable_approved'
+  | 'deliverable_revision'
+  | 'deliverable_rejected'
+  | 'dispute_opened'
+  | 'dispute_resolved'
+  | 'payout_sent'
+  | 'verification_requested'
+  | 'verification_decision'
+  | 'admin_message';

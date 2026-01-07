@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/updateCampaignStatus.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "campaignId",
+    "status"
+  ],
+  "properties": {
+    "campaignId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "live",
+        "paused",
+        "completed",
+        "archived"
+      ]
+    }
+  }
+}

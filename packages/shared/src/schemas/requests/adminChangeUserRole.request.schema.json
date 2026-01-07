@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/adminChangeUserRole.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "uid",
+    "role"
+  ],
+  "properties": {
+    "uid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "artist",
+        "creator",
+        "admin"
+      ]
+    }
+  }
+}

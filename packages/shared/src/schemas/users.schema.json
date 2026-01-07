@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/users.schema.json",
+  "title": "users/{uid}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["uid","email","role","status","createdAt","updatedAt"],
+  "properties": {
+    "uid": { "type": "string", "minLength": 1 },
+    "email": { "type": "string", "format": "email" },
+    "role": { "type": "string", "enum": ["unassigned","artist","creator","admin"] },
+    "status": { "type": "string", "enum": ["active","suspended"] },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/acceptOffer.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "offerId"
+  ],
+  "properties": {
+    "offerId": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

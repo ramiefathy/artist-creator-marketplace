@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/threads.schema.json",
+  "title": "threads/{threadId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["threadId","participants","campaignId","offerId","contractId","lastMessageAt","createdAt"],
+  "properties": {
+    "threadId": { "type": "string", "minLength": 1 },
+    "participants": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "offerId": { "type": ["string","null"], "minLength": 1 },
+    "contractId": { "type": ["string","null"], "minLength": 1 },
+    "lastMessageAt": { "$ref": "timestamp.schema.json" },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

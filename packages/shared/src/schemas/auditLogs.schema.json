@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/auditLogs.schema.json",
+  "title": "auditLogs/{logId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["logId","actorUid","actorRole","action","targetType","targetId","metadata","createdAt"],
+  "properties": {
+    "logId": { "type": "string", "minLength": 1 },
+    "actorUid": { "type": "string", "minLength": 1 },
+    "actorRole": { "type": "string", "enum": ["unassigned","artist","creator","admin"] },
+    "action": { "type": "string", "minLength": 3, "maxLength": 64 },
+    "targetType": { "type": "string", "minLength": 3, "maxLength": 32 },
+    "targetId": { "type": "string", "minLength": 1 },
+    "metadata": { "type": "object" },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

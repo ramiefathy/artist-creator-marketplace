@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/updateArtistProfile.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "displayName",
+    "entityType",
+    "country",
+    "timezone"
+  ],
+  "properties": {
+    "displayName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 60
+    },
+    "entityType": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "label",
+        "management"
+      ]
+    },
+    "country": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64
+    }
+  }
+}

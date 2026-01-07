@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/_meta.schema.json",
+  "title": "MCMP schema meta",
+  "type": "object"
+}

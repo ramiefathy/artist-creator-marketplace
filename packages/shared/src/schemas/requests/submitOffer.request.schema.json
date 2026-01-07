@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/submitOffer.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "campaignId",
+    "priceCents",
+    "message"
+  ],
+  "properties": {
+    "campaignId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "priceCents": {
+      "type": "integer",
+      "minimum": 500,
+      "maximum": 500000
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    }
+  }
+}

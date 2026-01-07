@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/createTrack.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trackId",
+    "title",
+    "artistName",
+    "genre",
+    "moodTags",
+    "isrc",
+    "externalLinks",
+    "rightsTier",
+    "rightsAttestation",
+    "rightsAttestationNotes",
+    "coverUploaded"
+  ],
+  "properties": {
+    "trackId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "artistName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "genre": {
+      "type": "string"
+    },
+    "moodTags": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32
+      }
+    },
+    "isrc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[A-Z]{2}[A-Z0-9]{3}\\d{7}$"
+    },
+    "externalLinks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spotify",
+        "appleMusic",
+        "youtube",
+        "tiktokSound"
+      ],
+      "properties": {
+        "spotify": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "appleMusic": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "youtube": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "tiktokSound": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
+      }
+    },
+    "rightsTier": {
+      "type": "string",
+      "enum": [
+        "tier1_attestation",
+        "tier2_verified"
+      ]
+    },
+    "rightsAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attestsMasterRights",
+        "attestsPublishingRights",
+        "hasCoWritersOrSplits"
+      ],
+      "properties": {
+        "attestsMasterRights": {
+          "type": "boolean"
+        },
+        "attestsPublishingRights": {
+          "type": "boolean"
+        },
+        "hasCoWritersOrSplits": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rightsAttestationNotes": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 1000
+    },
+    "coverUploaded": {
+      "type": "boolean"
+    }
+  }
+}

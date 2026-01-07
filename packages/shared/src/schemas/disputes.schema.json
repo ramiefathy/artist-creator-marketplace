@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/disputes.schema.json",
+  "title": "disputes/{disputeId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disputeId","contractId","artistUid","creatorUid","openedByUid","openedByRole",
+    "reasonCode","description","evidencePaths","status","resolution","createdAt","updatedAt"
+  ],
+  "properties": {
+    "disputeId": { "type": "string", "minLength": 1 },
+    "contractId": { "type": "string", "minLength": 1 },
+    "artistUid": { "type": "string", "minLength": 1 },
+    "creatorUid": { "type": "string", "minLength": 1 },
+    "openedByUid": { "type": "string", "minLength": 1 },
+    "openedByRole": { "type": "string", "enum": ["artist","creator","admin"] },
+    "reasonCode": {
+      "type": "string",
+      "enum": ["non_delivery","wrong_music","missing_disclosure","late_post","quality_issue","other"]
+    },
+    "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "evidencePaths": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["open","under_review","resolved_refund","resolved_no_refund","resolved_partial_refund"]
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adminUid","notes","refundCents","resolvedAt"],
+      "properties": {
+        "adminUid": { "type": ["string","null"], "minLength": 1 },
+        "notes": { "type": ["string","null"], "maxLength": 2000 },
+        "refundCents": { "type": "integer", "minimum": 0 },
+        "resolvedAt": { "type": ["string","null"], "format": "date-time" }
+      }
+    },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

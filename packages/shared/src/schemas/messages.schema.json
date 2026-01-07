@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/messages.schema.json",
+  "title": "threads/{threadId}/messages/{messageId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["messageId","senderUid","text","createdAt"],
+  "properties": {
+    "messageId": { "type": "string", "minLength": 1 },
+    "senderUid": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

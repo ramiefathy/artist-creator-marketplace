@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/contracts.schema.json",
+  "title": "contracts/{contractId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractId","campaignId","trackId","artistUid","creatorUid","offerId","status",
+    "pricing","payout","stripe","terms","snapshots","contractPdfPath",
+    "activatedAt","completedAt","createdAt","updatedAt"
+  ],
+  "properties": {
+    "contractId": { "type": "string", "minLength": 1 },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "trackId": { "type": "string", "minLength": 1 },
+    "artistUid": { "type": "string", "minLength": 1 },
+    "creatorUid": { "type": "string", "minLength": 1 },
+    "offerId": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["pending_payment","active","completed","cancelled","disputed"] },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency","totalPriceCents","platformFeeBps","creatorPayoutTotalCents"],
+      "properties": {
+        "currency": { "type": "string", "const": "USD" },
+        "totalPriceCents": { "type": "integer", "minimum": 500, "maximum": 500000 },
+        "platformFeeBps": { "type": "integer", "const": 2000 },
+        "creatorPayoutTotalCents": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "payout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["creatorStripeAccountId","paidOutCents","stripeTransferId","transferStatus"],
+      "properties": {
+        "creatorStripeAccountId": { "type": "string", "minLength": 1 },
+        "paidOutCents": { "type": "integer", "minimum": 0 },
+        "stripeTransferId": { "type": ["string","null"], "minLength": 1 },
+        "transferStatus": { "type": "string", "enum": ["none","pending","sent","failed"] }
+      }
+    },
+    "stripe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkoutSessionId","paymentIntentId","paymentStatus"],
+      "properties": {
+        "checkoutSessionId": { "type": "string", "minLength": 1 },
+        "paymentIntentId": { "type": ["string","null"], "minLength": 1 },
+        "paymentStatus": { "type": "string", "enum": ["unpaid","paid","refunded","partial_refund","failed"] }
+      }
+    },
+    "terms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["termsVersion","licenseGrantText","disclosureRequirementsText","agreedByCreatorAt","agreedByArtistAt"],
+      "properties": {
+        "termsVersion": { "type": "string", "const": "v1" },
+        "licenseGrantText": { "type": "string", "minLength": 20 },
+        "disclosureRequirementsText": { "type": "string", "minLength": 20 },
+        "agreedByCreatorAt": { "type": ["string","null"], "format": "date-time" },
+        "agreedByArtistAt": { "type": ["string","null"], "format": "date-time" }
+      }
+    },
+    "snapshots": { "type": "object" },
+    "contractPdfPath": { "type": "string", "pattern": "^contracts\\/[^\\/]+\\/contract\\.pdf$" },
+    "activatedAt": { "type": ["string","null"], "format": "date-time" },
+    "completedAt": { "type": ["string","null"], "format": "date-time" },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

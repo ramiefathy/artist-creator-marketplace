@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/requests/getTrackPreviewUrl.request.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trackId"
+  ],
+  "properties": {
+    "trackId": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

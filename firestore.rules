@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : 'unassigned'; }
+    function isAdmin() { return role() == 'admin'; }
+    function isArtist() { return role() == 'artist'; }
+    function isCreator() { return role() == 'creator'; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+      allow create: if false; // created by auth trigger
+      allow update: if isAdmin(); // role/status managed by functions
+      allow delete: if false;
+    }
+
+    match /artistProfiles/{uid} {
+      allow read: if signedIn();
+      allow create: if false;
+      allow update: if isSelf(uid) && isArtist();
+      allow delete: if false;
+    }
+
+    match /artistPrivate/{uid} {
+      allow read, write: if false; // functions only
+    }
+
+    match /creatorProfiles/{uid} {
+      allow read: if signedIn();
+      allow create: if false;
+      allow update: if isSelf(uid) && isCreator();
+      allow delete: if false;
+    }
+
+    match /creatorPrivate/{uid} {
+      allow read, write: if false; // functions only
+    }
+
+    match /tracks/{trackId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false; // functions only
+    }
+
+    match /trackPrivate/{trackId} {
+      allow read, write: if false; // functions only
+    }
+
+    match /campaigns/{campaignId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false; // functions only
+    }
+
+    match /offers/{offerId} {
+      allow read: if signedIn() && (
+        (isCreator() && resource.data.creatorUid == request.auth.uid) ||
+        (isArtist() && resource.data.artistUid == request.auth.uid) ||
+        isAdmin()
+      );
+      allow create, update, delete: if false; // functions only
+    }
+
+    match /contracts/{contractId} {
+      allow read: if signedIn() && (
+        resource.data.artistUid == request.auth.uid ||
+        resource.data.creatorUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if false; // functions only
+    }
+
+    match /deliverables/{deliverableId} {
+      allow read: if signedIn() && (
+        resource.data.artistUid == request.auth.uid ||
+        resource.data.creatorUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if false; // functions only
+    }
+
+    match /threads/{threadId} {
+      allow read: if signedIn() && (
+        resource.data.participants.hasAny([request.auth.uid]) ||
+        isAdmin()
+      );
+      allow create, update, delete: if false; // functions only
+
+      match /messages/{messageId} {
+        allow read: if signedIn() && (
+          get(/databases/$(database)/documents/threads/$(threadId)).data.participants.hasAny([request.auth.uid]) ||
+          isAdmin()
+        );
+        allow write: if false; // functions only
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && (resource.data.toUid == request.auth.uid || isAdmin());
+      allow write: if false; // functions only
+    }
+
+    match /disputes/{disputeId} {
+      allow read: if signedIn() && (
+        resource.data.artistUid == request.auth.uid ||
+        resource.data.creatorUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if false; // functions only
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if signedIn();
+      allow write: if false; // functions only
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /stripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /payoutTransfers/{id} {
+      allow read: if signedIn() && (
+        resource.data.artistUid == request.auth.uid ||
+        resource.data.creatorUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow write: if false;
+    }
+  }
+}

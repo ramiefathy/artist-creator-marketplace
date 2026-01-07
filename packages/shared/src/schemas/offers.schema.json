@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/offers.schema.json",
+  "title": "offers/{offerId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["offerId","campaignId","creatorUid","artistUid","deliverablesCount","priceCents","message","status","createdAt","updatedAt"],
+  "properties": {
+    "offerId": { "type": "string", "minLength": 1 },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "creatorUid": { "type": "string", "minLength": 1 },
+    "artistUid": { "type": "string", "minLength": 1 },
+    "deliverablesCount": { "type": "integer", "const": 1 },
+    "priceCents": { "type": "integer", "minimum": 500, "maximum": 500000 },
+    "message": { "type": ["string","null"], "maxLength": 1000 },
+    "status": { "type": "string", "enum": ["submitted","withdrawn","accepted","rejected"] },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

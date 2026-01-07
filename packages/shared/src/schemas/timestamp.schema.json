@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/timestamp.schema.json",
+  "title": "RFC3339 date-time string",
+  "type": "string",
+  "format": "date-time"
+}

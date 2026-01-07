@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/creatorPrivate.schema.json",
+  "title": "creatorPrivate/{uid}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "uid","metricsEvidencePaths","verificationNotes","verificationRequestedAt",
+    "verificationReviewedAt","verificationReviewedBy","stripeConnect","createdAt","updatedAt"
+  ],
+  "properties": {
+    "uid": { "type": "string", "minLength": 1 },
+    "metricsEvidencePaths": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "verificationNotes": { "type": ["string","null"], "maxLength": 1000 },
+    "verificationRequestedAt": { "type": ["string","null"], "format": "date-time" },
+    "verificationReviewedAt": { "type": ["string","null"], "format": "date-time" },
+    "verificationReviewedBy": { "type": ["string","null"], "minLength": 1 },
+    "stripeConnect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accountId","onboardingStatus"],
+      "properties": {
+        "accountId": { "type": ["string","null"], "minLength": 1 },
+        "onboardingStatus": { "type": "string", "enum": ["not_started","pending","complete"] }
+      }
+    },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

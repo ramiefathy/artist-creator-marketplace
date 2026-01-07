@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/artistProfiles.schema.json",
+  "title": "artistProfiles/{uid}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["uid","displayName","entityType","country","timezone","ratingAvg","ratingCount","createdAt","updatedAt"],
+  "properties": {
+    "uid": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 3, "maxLength": 60 },
+    "entityType": { "type": "string", "enum": ["individual","label","management"] },
+    "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+    "timezone": { "type": "string", "minLength": 3, "maxLength": 64 },
+    "ratingAvg": { "type": "number", "minimum": 0, "maximum": 5 },
+    "ratingCount": { "type": "integer", "minimum": 0 },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

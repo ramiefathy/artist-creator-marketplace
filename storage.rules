@@ -1,0 +1,51 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : 'unassigned'; }
+    function isArtist() { return role() == 'artist'; }
+    function isCreator() { return role() == 'creator'; }
+    function isAdmin() { return role() == 'admin'; }
+
+    // No direct client reads of protected assets; use signed URLs via callable functions.
+    match /{allPaths=**} {
+      allow read: if false;
+    }
+
+    // Track uploads (artists)
+    match /tracks/{artistUid}/{trackId}/{fileName} {
+      allow write: if signedIn() && isArtist() && request.auth.uid == artistUid
+        && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    match /tracks/{artistUid}/{trackId}/rights/{docId} {
+      allow write: if signedIn() && isArtist() && request.auth.uid == artistUid
+        && request.resource.size < 20 * 1024 * 1024;
+    }
+
+    // Creator verification evidence (creators)
+    match /creatorEvidence/{creatorUid}/{fileId} {
+      allow write: if signedIn() && isCreator() && request.auth.uid == creatorUid
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Deliverable evidence (creators)
+    match /deliverableEvidence/{deliverableId}/{artistUid}/{creatorUid}/{fileId} {
+      allow write: if signedIn() && isCreator() && request.auth.uid == creatorUid
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Dispute evidence (uploaded by either party; server-side checks ensure uploader is a party)
+    match /disputeEvidence/{contractId}/{uploaderUid}/{fileId} {
+      allow write: if signedIn()
+        && request.auth.uid == uploaderUid
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Contracts PDFs written by server only (no client write)
+    match /contracts/{contractId}/{fileName} {
+      allow write: if false;
+    }
+  }
+}

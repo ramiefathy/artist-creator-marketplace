@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/stripeEvents.schema.json",
+  "title": "stripeEvents/{eventId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId","type","processedAt","createdAt"],
+  "properties": {
+    "eventId": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "minLength": 1 },
+    "processedAt": { "$ref": "timestamp.schema.json" },
+    "createdAt": { "$ref": "timestamp.schema.json" }
+  }
+}

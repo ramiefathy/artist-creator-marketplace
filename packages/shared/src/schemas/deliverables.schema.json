@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcmp.local/schemas/deliverables.schema.json",
+  "title": "deliverables/{deliverableId}",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deliverableId","contractId","campaignId","artistUid","creatorUid","type","dueAt",
+    "status","submission","review","createdAt","updatedAt"
+  ],
+  "properties": {
+    "deliverableId": { "type": "string", "minLength": 1 },
+    "contractId": { "type": "string", "minLength": 1 },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "artistUid": { "type": "string", "minLength": 1 },
+    "creatorUid": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "enum": ["tiktok_post","ig_reel","yt_short"] },
+    "dueAt": { "$ref": "timestamp.schema.json" },
+    "status": { "type": "string", "enum": ["pending","submitted","revision_requested","approved","rejected","expired"] },
+    "submission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["postUrl","submittedAt","creatorNotes","compliance","evidencePaths","metrics24h"],
+      "properties": {
+        "postUrl": { "type": ["string","null"], "format": "uri" },
+        "submittedAt": { "type": ["string","null"], "format": "date-time" },
+        "creatorNotes": { "type": ["string","null"], "maxLength": 1000 },
+        "compliance": {
+          "type": ["object","null"],
+          "additionalProperties": false,
+          "required": ["disclosureConfirmed","licenseConfirmed","postLiveDaysConfirmed"],
+          "properties": {
+            "disclosureConfirmed": { "type": "boolean" },
+            "licenseConfirmed": { "type": "boolean" },
+            "postLiveDaysConfirmed": { "type": "boolean" }
+          }
+        },
+        "evidencePaths": {
+          "type": "array",
+          "maxItems": 3,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "metrics24h": {
+          "type": ["object","null"],
+          "additionalProperties": false,
+          "required": ["views","likes","comments","shares","saves"],
+          "properties": {
+            "views": { "type": "integer", "minimum": 0 },
+            "likes": { "type": "integer", "minimum": 0 },
+            "comments": { "type": "integer", "minimum": 0 },
+            "shares": { "type": "integer", "minimum": 0 },
+            "saves": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artistDecision","artistNotes","reviewedAt"],
+      "properties": {
+        "artistDecision": { "type": "string", "enum": ["none","approved","revision_requested","rejected"] },
+        "artistNotes": { "type": ["string","null"], "maxLength": 1000 },
+        "reviewedAt": { "type": ["string","null"], "format": "date-time" }
+      }
+    },
+    "createdAt": { "$ref": "timestamp.schema.json" },
+    "updatedAt": { "$ref": "timestamp.schema.json" }
+  }
+}

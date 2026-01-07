@@ -1,0 +1,22 @@
+{
+  "name": "music-creator-marketplace",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "functions",
+    "packages/web"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "build": "npm run build:shared && npm run build:functions && npm run build:web",
+    "build:shared": "npm --workspace packages/shared run build",
+    "build:functions": "npm --workspace functions run build",
+    "build:web": "npm --workspace packages/web run build",
+    "dev": "npm run emulators",
+    "emulators": "firebase emulators:start --import=./.emulator-data --export-on-exit=./.emulator-data",
+    "deploy:dev": "firebase use dev && npm run build && firebase deploy",
+    "deploy:prod": "firebase use prod && npm run build && firebase deploy",
+    "test": "npm --workspace functions run test",
+    "dev:web": "npm --workspace packages/web run dev"
+  }
+}
