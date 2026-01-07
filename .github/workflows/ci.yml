@@ -7,6 +7,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Public Firebase web config required for Next.js prerender during `next build`.
+      NEXT_PUBLIC_FIREBASE_API_KEY: "REDACTED_FIREBASE_API_KEY"
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "artist-creator-marketplace.firebaseapp.com"
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: "artist-creator-marketplace"
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "artist-creator-marketplace.firebasestorage.app"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:653679618950:web:feef84014bffad2b281a07"
+      NEXT_PUBLIC_USE_EMULATORS: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
