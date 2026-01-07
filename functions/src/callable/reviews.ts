@@ -18,7 +18,7 @@ function updateAggregate(currentAvg: number, currentCount: number, newRating: nu
 
 export const leaveReview = onCall({ region: 'us-central1' }, async (req) => {
   requireEmailVerified(req);
-  const { uid, role } = requireAuth(req);
+  const { uid } = requireAuth(req);
   await requireUserActive(uid);
 
   const data = validateOrThrow<Req>(leaveReviewSchema, req.data);

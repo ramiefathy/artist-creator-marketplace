@@ -1,0 +1,18 @@
+.label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.text {
+  line-height: 1.2;
+}
+
+.requiredMark {
+  color: var(--color-error);
+}
+

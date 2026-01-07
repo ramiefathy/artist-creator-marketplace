@@ -1,0 +1,47 @@
+.heading {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.xs {
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.sm {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.md {
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.lg {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.xl {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+._2xl {
+  font-size: 1.875rem;
+  line-height: 1.1;
+}
+
+._3xl {
+  font-size: 2.25rem;
+  line-height: 1.05;
+}
+
+._4xl {
+  font-size: 3rem;
+  line-height: 1;
+}
+

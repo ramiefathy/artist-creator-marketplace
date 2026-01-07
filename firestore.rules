@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function role() { return signedIn() ? request.auth.token.role : 'unassigned'; }
+    // Custom claims (e.g. `role`) may be missing on freshly-issued ID tokens until a refresh.
+    // Use map.get() to avoid hard failures when the key is absent.
+    function role() { return signedIn() ? request.auth.token.get('role', 'unassigned') : 'unassigned'; }
     function isAdmin() { return role() == 'admin'; }
     function isArtist() { return role() == 'artist'; }
     function isCreator() { return role() == 'creator'; }

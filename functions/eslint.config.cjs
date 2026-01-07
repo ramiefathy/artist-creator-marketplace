@@ -2,9 +2,13 @@ const js = require("@eslint/js");
 const tseslint = require("typescript-eslint");
 
 module.exports = [
+  {
+    ignores: ["dist/**", "eslint.config.cjs"]
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["src/**/*.ts"],
     languageOptions: {
       parserOptions: {
         project: ["./tsconfig.json"]

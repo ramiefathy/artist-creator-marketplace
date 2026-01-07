@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Public Firebase web config required for Next.js prerender during `next build`.
-      NEXT_PUBLIC_FIREBASE_API_KEY: "REDACTED_FIREBASE_API_KEY"
+      # Prefer a GitHub Actions secret; fall back to a dummy value so forks/PRs still build.
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY || 'DUMMY_FIREBASE_API_KEY' }}
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "artist-creator-marketplace.firebaseapp.com"
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: "artist-creator-marketplace"
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "artist-creator-marketplace.firebasestorage.app"

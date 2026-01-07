@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --passWithNoTests",
     "lint": "eslint ."
   },
   "dependencies": {

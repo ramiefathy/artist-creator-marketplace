@@ -39,7 +39,7 @@ export const autoApproveDeliverables = onSchedule(
       // Payout + completion
       try {
         await payoutCreatorForContract(d.contractId);
-      } catch (_e) {
+      } catch {
         // Swallow; payout util already guards conditions.
       }
 

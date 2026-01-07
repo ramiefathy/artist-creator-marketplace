@@ -12,6 +12,7 @@ export interface UserDoc {
   email: string;
   role: UserRole;
   status: UserStatus;
+  theme?: 'noir' | 'analog' | 'luma' | 'flux';
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }

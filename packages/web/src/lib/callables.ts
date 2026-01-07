@@ -2,6 +2,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
 
 export const callSetInitialRole = httpsCallable(functions, 'setInitialRole');
+export const callSetThemePreference = httpsCallable(functions, 'setThemePreference');
 export const callUpdateArtistProfile = httpsCallable(functions, 'updateArtistProfile');
 export const callUpdateCreatorProfile = httpsCallable(functions, 'updateCreatorProfile');
 

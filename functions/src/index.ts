@@ -1,6 +1,7 @@
 export { authOnCreateUser } from './triggers/authOnCreateUser';
 
 export { setInitialRole } from './callable/setInitialRole';
+export { setThemePreference } from './callable/setThemePreference';
 export { updateArtistProfile, updateCreatorProfile } from './callable/profiles';
 export { requestCreatorVerification, adminSetCreatorVerification } from './callable/creatorVerification';
 

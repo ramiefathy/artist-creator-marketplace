@@ -10,6 +10,15 @@ export const setInitialRoleSchema = {
   }
 } as const;
 
+export const setThemePreferenceSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['theme'],
+  properties: {
+    theme: { type: 'string', enum: ['noir', 'analog', 'luma', 'flux'] }
+  }
+} as const;
+
 export const updateArtistProfileSchema = {
   type: 'object',
   additionalProperties: false,

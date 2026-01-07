@@ -1,5 +1,4 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import * as admin from 'firebase-admin';
 import { db } from '../init';
 import { nowIso } from '../utils/firestore';
 import { CONTRACT_AUTO_CANCEL_HOURS } from '../shared/constants';

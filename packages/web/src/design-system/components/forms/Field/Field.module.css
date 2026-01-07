@@ -1,0 +1,14 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.helpText {
+  margin-top: 0.25rem;
+}
+
+.errorText {
+  margin-top: 0.25rem;
+}
+

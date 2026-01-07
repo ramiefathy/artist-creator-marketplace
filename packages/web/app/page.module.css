@@ -1,0 +1,35 @@
+.main {
+  padding: 4rem 0;
+}
+
+.hero {
+  padding: 3rem 0 2rem;
+}
+
+.title {
+  max-width: 20ch;
+}
+
+.subtitle {
+  margin-top: 0.75rem;
+  max-width: 60ch;
+}
+
+.themeSection {
+  margin-top: 2.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.sectionTitle {
+  margin-bottom: 1rem;
+}
+
+.cta {
+  margin-top: 2.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+

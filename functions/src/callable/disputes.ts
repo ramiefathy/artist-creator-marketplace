@@ -1,5 +1,4 @@
 import { onCall } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
 import { bucket, db } from '../init';
 import { requireEmailVerified, requireRole, requireAdmin } from '../utils/auth';
 import { requireUserActive } from '../utils/users';
