@@ -1,30 +1,38 @@
-# Firebase App Hosting configuration (skeleton).
-# Adjust env vars and regions for your project.
+# Firebase App Hosting configuration.
+# https://firebase.google.com/docs/app-hosting/configure#apphosting-yaml
+
 runConfig:
-  runtime: nodejs22
-  region: us-central1
+  cpu: 1
+  memoryMiB: 512
+
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "REDACTED_FIREBASE_API_KEY"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "artist-creator-marketplace.firebaseapp.com"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "artist-creator-marketplace"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:653679618950:web:feef84014bffad2b281a07"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "artist-creator-marketplace.firebasestorage.app"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_USE_EMULATORS
+    value: "false"
     availability:
       - BUILD
       - RUNTIME
