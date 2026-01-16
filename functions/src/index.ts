@@ -18,6 +18,23 @@ export { openDispute, adminResolveDispute } from './callable/disputes';
 
 export { sendMessage } from './callable/messaging';
 export { leaveReview } from './callable/reviews';
+export {
+  setAccountPrivacy,
+  requestFollow,
+  claimHandle,
+  approveFollower,
+  removeFollower,
+  unfollow,
+  createPost,
+  updatePost,
+  deletePost,
+  createComment,
+  deleteComment,
+  toggleLike
+} from './callable/social';
+export { initiateMediaUpload, finalizeMediaUpload, attachMediaToPost } from './callable/media';
+export { reportPost, reportComment, reportUser, adminUpdateReportStatus } from './callable/reports';
+export { blockUser, unblockUser, muteUser, unmuteUser } from './callable/blocks';
 
 export {
   getTrackPreviewUrl,
@@ -31,6 +48,7 @@ export {
 export { adminSetUserStatus, adminChangeUserRole } from './callable/admin';
 
 export { stripeWebhook } from './webhooks/stripeWebhook';
+export { mediaProxy } from './webhooks/mediaProxy';
 
 export { cancelUnpaidContracts } from './scheduled/cancelUnpaidContracts';
 export { autoApproveDeliverables } from './scheduled/autoApproveDeliverables';

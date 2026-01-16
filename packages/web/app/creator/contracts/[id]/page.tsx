@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
@@ -9,11 +8,13 @@ import { useAuth } from '@/components/AuthProvider';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callGetContractPdfUrl, callGetDeliverableEvidenceUrls, callSubmitDeliverable, callOpenDispute } from '@/lib/callables';
+import { Badge, Button, ButtonLink, Card, Field, Heading, Input, Section, Stack, Text, Textarea, useToast } from '@/design-system';
 
 export default function CreatorContractPage({ params }: { params: { id: string } }) {
   const contractId = params.id;
   const { user } = useAuth();
   const creatorUid = user?.uid ?? '';
+  const { pushToast } = useToast();
 
   const [contract, setContract] = useState<any | null>(null);
   const [deliverable, setDeliverable] = useState<any | null>(null);
@@ -41,162 +42,232 @@ export default function CreatorContractPage({ params }: { params: { id: string }
   return (
     <RequireVerified>
       <RequireRole allow={['creator', 'admin']}>
-        <main>
-          <p>
-            <Link href="/creator/dashboard">← Back</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Contract</Heading>
+              <ButtonLink href="/creator/dashboard" variant="secondary" size="sm">
+                ← Back to dashboard
+              </ButtonLink>
+            </Stack>
 
-          <h1>Contract</h1>
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {!contract ? <p>Not found.</p> : null}
+            {!contract ? <Text color="muted">Not found.</Text> : null}
 
-          {contract ? (
-            <>
-              <p>Status: {contract.status}</p>
-              <p>Payment: {contract.stripe?.paymentStatus}</p>
-              <p>Artist: {contract.artistUid}</p>
-
-              <button
-                onClick={async () => {
-                  setErrMsg(null);
-                  try {
-                    const res: any = await callGetContractPdfUrl({ contractId });
-                    const url = (res.data as any)?.url as string;
-                    window.open(url, '_blank');
-                  } catch (e: any) {
-                    setErrMsg(e?.message ?? 'Failed');
-                  }
-                }}
-              >
-                Open contract PDF
-              </button>
-
-              {threadId ? (
-                <p style={{ marginTop: 8 }}>
-                  <Link href={`/messages/${threadId}`}>Open message thread</Link>
-                </p>
-              ) : null}
-
-              <h2 style={{ marginTop: 24 }}>Deliverable</h2>
-              {!deliverable ? <p>Deliverable not found.</p> : null}
-              {deliverable ? (
-                <>
-                  <p>Status: {deliverable.status}</p>
-                  <p>Due: {deliverable.dueAt}</p>
-
-                  <div style={{ marginTop: 12 }}>
-                    <button
-                      onClick={async () => {
-                        setErrMsg(null);
-                        try {
-                          const res: any = await callGetDeliverableEvidenceUrls({ deliverableId: deliverable.deliverableId });
-                          setEvidenceUrls((res.data as any)?.urls ?? []);
-                        } catch (e: any) {
-                          setErrMsg(e?.message ?? 'Failed to load evidence URLs');
-                        }
-                      }}
-                    >
-                      Load deliverable evidence URLs
-                    </button>
-                    {deliverable.submission?.evidencePaths?.length ? (
-                      <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.7 }}>Files: {deliverable.submission.evidencePaths.length}</span>
-                    ) : null}
-                  </div>
-                  {evidenceUrls.length ? (
-                    <ul>
-                      {evidenceUrls.map((u) => (
-                        <li key={u}>
-                          <a href={u} target="_blank" rel="noreferrer">
-                            Open evidence
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-
-                  {contract.status === 'active' && ['pending', 'revision_requested'].includes(deliverable.status) ? (
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        setErrMsg(null);
-                        try {
-                          if (!postUrl) throw new Error('Post URL required');
-
-                          // Upload evidence files (optional)
-                          const evidencePaths: string[] = [];
-                          const files = evidenceFiles ? Array.from(evidenceFiles).slice(0, 3) : [];
-                          for (const f of files) {
-                            const fileId = `${crypto.randomUUID()}_${f.name}`;
-                            const path = `deliverableEvidence/${deliverable.deliverableId}/${contract.artistUid}/${creatorUid}/${fileId}`;
-                            await uploadBytes(storageRef(storage, path), f, { contentType: f.type || 'application/octet-stream' });
-                            evidencePaths.push(path);
-                          }
-
-                          await callSubmitDeliverable({
-                            deliverableId: deliverable.deliverableId,
-                            postUrl,
-                            creatorNotes: creatorNotes || null,
-                            compliance: { disclosureConfirmed: true, licenseConfirmed: true, postLiveDaysConfirmed: true },
-                            metrics24h: null,
-                            evidencePaths
-                          });
-
-                          setPostUrl('');
-                          setCreatorNotes('');
-                          setEvidenceFiles(null);
-                          await refresh();
-                          alert('Deliverable submitted.');
-                        } catch (e: any) {
-                          setErrMsg(e?.message ?? 'Failed');
-                        }
-                      }}
-                    >
+            {contract ? (
+              <Stack gap={4}>
+                <Card>
+                  <Stack gap={2}>
+                    <Heading level={2}>Overview</Heading>
+                    <Stack gap={1}>
+                      <Text color="muted">Status</Text>
                       <div>
-                        <label>Post URL</label>
-                        <br />
-                        <input value={postUrl} onChange={(e) => setPostUrl(e.target.value)} required />
+                        <Badge variant={contract.status === 'active' ? 'info' : contract.status === 'completed' ? 'success' : 'neutral'}>
+                          {contract.status}
+                        </Badge>
+                      </div>
+                    </Stack>
+                    <Stack gap={1}>
+                      <Text color="muted">Payment</Text>
+                      <Text as="div">{contract.stripe?.paymentStatus ?? 'n/a'}</Text>
+                    </Stack>
+                    <Stack gap={1}>
+                      <Text color="muted">Artist UID</Text>
+                      <Text as="div">{contract.artistUid}</Text>
+                    </Stack>
+                    <Stack gap={2}>
+                      <div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={async () => {
+                            setErrMsg(null);
+                            try {
+                              const res: any = await callGetContractPdfUrl({ contractId });
+                              const url = (res.data as any)?.url as string;
+                              window.open(url, '_blank');
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed');
+                            }
+                          }}
+                        >
+                          Open contract PDF
+                        </Button>
                       </div>
 
-                      <div style={{ marginTop: 12 }}>
-                        <label>Notes (optional)</label>
-                        <br />
-                        <textarea value={creatorNotes} onChange={(e) => setCreatorNotes(e.target.value)} rows={3} />
-                      </div>
+                      {threadId ? (
+                        <div>
+                          <ButtonLink href={`/messages/${threadId}`} variant="secondary" size="sm">
+                            Open message thread
+                          </ButtonLink>
+                        </div>
+                      ) : null}
+                    </Stack>
+                  </Stack>
+                </Card>
 
-                      <div style={{ marginTop: 12 }}>
-                        <label>Evidence (optional, up to 3 files)</label>
-                        <br />
-                        <input type="file" multiple onChange={(e) => setEvidenceFiles(e.target.files)} />
-                      </div>
+                <Card>
+                  <Stack gap={3}>
+                    <Heading level={2}>Deliverable</Heading>
+                    {!deliverable ? <Text color="muted">Deliverable not found.</Text> : null}
+                    {deliverable ? (
+                      <Stack gap={3}>
+                        <Stack gap={1}>
+                          <Text color="muted">Status</Text>
+                          <div>
+                            <Badge
+                              variant={
+                                deliverable.status === 'approved'
+                                  ? 'success'
+                                  : deliverable.status === 'revision_requested'
+                                    ? 'warning'
+                                    : deliverable.status === 'submitted'
+                                      ? 'info'
+                                      : 'neutral'
+                              }
+                            >
+                              {deliverable.status}
+                            </Badge>
+                          </div>
+                        </Stack>
 
-                      <button style={{ marginTop: 12 }} type="submit">
-                        Submit deliverable
-                      </button>
-                    </form>
-                  ) : null}
+                        <Stack gap={1}>
+                          <Text color="muted">Due</Text>
+                          <Text as="div">{deliverable.dueAt}</Text>
+                        </Stack>
 
-                  <h3 style={{ marginTop: 24 }}>Dispute</h3>
-                  <button
-                    onClick={async () => {
-                      setErrMsg(null);
-                      try {
-                        await callOpenDispute({ contractId, reasonCode: 'other', description: 'Opening dispute from creator.', evidencePaths: [] });
-                        alert('Dispute opened.');
-                        await refresh();
-                      } catch (e: any) {
-                        setErrMsg(e?.message ?? 'Failed');
-                      }
-                    }}
-                  >
-                    Open dispute
-                  </button>
-                </>
-              ) : null}
-            </>
-          ) : null}
+                        <Stack gap={2}>
+                          <div>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async () => {
+                                setErrMsg(null);
+                                try {
+                                  const res: any = await callGetDeliverableEvidenceUrls({ deliverableId: deliverable.deliverableId });
+                                  setEvidenceUrls((res.data as any)?.urls ?? []);
+                                } catch (e: any) {
+                                  setErrMsg(e?.message ?? 'Failed to load evidence URLs');
+                                }
+                              }}
+                            >
+                              Load deliverable evidence URLs
+                            </Button>
+                          </div>
+                          {deliverable.submission?.evidencePaths?.length ? (
+                            <Text size="sm" color="muted">
+                              Files: {deliverable.submission.evidencePaths.length}
+                            </Text>
+                          ) : null}
+                        </Stack>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
-        </main>
+                        {evidenceUrls.length ? (
+                          <ul>
+                            {evidenceUrls.map((u) => (
+                              <li key={u}>
+                                <a href={u} target="_blank" rel="noreferrer">
+                                  Open evidence
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+
+                        {contract.status === 'active' && ['pending', 'revision_requested'].includes(deliverable.status) ? (
+                          <Card>
+                            <Stack
+                              as="form"
+                              gap={4}
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                setErrMsg(null);
+                                try {
+                                  if (!postUrl) throw new Error('Post URL required');
+
+                                  const evidencePaths: string[] = [];
+                                  const files = evidenceFiles ? Array.from(evidenceFiles).slice(0, 3) : [];
+                                  for (const f of files) {
+                                    const fileId = `${crypto.randomUUID()}_${f.name}`;
+                                    const path = `deliverableEvidence/${deliverable.deliverableId}/${contract.artistUid}/${creatorUid}/${fileId}`;
+                                    await uploadBytes(storageRef(storage, path), f, { contentType: f.type || 'application/octet-stream' });
+                                    evidencePaths.push(path);
+                                  }
+
+                                  await callSubmitDeliverable({
+                                    deliverableId: deliverable.deliverableId,
+                                    postUrl,
+                                    creatorNotes: creatorNotes || null,
+                                    compliance: { disclosureConfirmed: true, licenseConfirmed: true, postLiveDaysConfirmed: true },
+                                    metrics24h: null,
+                                    evidencePaths
+                                  });
+
+                                  setPostUrl('');
+                                  setCreatorNotes('');
+                                  setEvidenceFiles(null);
+                                  await refresh();
+                                  pushToast({ title: 'Deliverable submitted', variant: 'success' });
+                                } catch (e: any) {
+                                  setErrMsg(e?.message ?? 'Failed');
+                                }
+                              }}
+                            >
+                              <Heading level={3}>Submit deliverable</Heading>
+
+                              <Field label="Post URL" htmlFor="postUrl" required>
+                                <Input id="postUrl" value={postUrl} onChange={(e) => setPostUrl(e.target.value)} required />
+                              </Field>
+
+                              <Field label="Notes (optional)" htmlFor="creatorNotes">
+                                <Textarea id="creatorNotes" value={creatorNotes} onChange={(e) => setCreatorNotes(e.target.value)} rows={3} />
+                              </Field>
+
+                              <Field label="Evidence (optional, up to 3 files)" htmlFor="evidenceFiles">
+                                <Input id="evidenceFiles" type="file" multiple onChange={(e) => setEvidenceFiles(e.target.files)} />
+                              </Field>
+
+                              <div>
+                                <Button type="submit">Submit deliverable</Button>
+                              </div>
+                            </Stack>
+                          </Card>
+                        ) : null}
+
+                        <Stack gap={2}>
+                          <Heading level={3}>Dispute</Heading>
+                          <div>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async () => {
+                                setErrMsg(null);
+                                try {
+                                  await callOpenDispute({
+                                    contractId,
+                                    reasonCode: 'other',
+                                    description: 'Opening dispute from creator.',
+                                    evidencePaths: []
+                                  });
+                                  pushToast({ title: 'Dispute opened', variant: 'info' });
+                                  await refresh();
+                                } catch (e: any) {
+                                  setErrMsg(e?.message ?? 'Failed');
+                                }
+                              }}
+                            >
+                              Open dispute
+                            </Button>
+                          </div>
+                        </Stack>
+                      </Stack>
+                    ) : null}
+                  </Stack>
+                </Card>
+              </Stack>
+            ) : null}
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

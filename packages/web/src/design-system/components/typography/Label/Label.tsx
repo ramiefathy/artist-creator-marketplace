@@ -1,21 +1,20 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/design-system/utils';
 import styles from './Label.module.css';
 
-export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+export type LabelProps = {
   required?: boolean;
-}
+  className?: string;
+  children: React.ReactNode;
+} & React.LabelHTMLAttributes<HTMLLabelElement>;
 
 export function Label({ required, className, children, ...props }: LabelProps) {
   return (
-    <label className={[styles.label, className].filter(Boolean).join(' ')} {...props}>
+    <label className={cn(styles.label, className)} {...props}>
       <span className={styles.text}>{children}</span>
-      {required ? (
-        <span className={styles.requiredMark} aria-hidden="true">
-          *
-        </span>
-      ) : null}
+      {required ? <span className={styles.required} aria-hidden="true">*</span> : null}
     </label>
   );
 }

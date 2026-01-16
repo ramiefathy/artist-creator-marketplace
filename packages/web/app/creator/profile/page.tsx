@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/components/AuthProvider';
 import { callUpdateCreatorProfile } from '@/lib/callables';
+import { Badge, Button, ButtonLink, Card, Field, Grid, Heading, Input, Section, Stack, Text, Textarea, useToast } from '@/design-system';
 
 type CreatorProfile = {
   uid: string;
@@ -46,6 +46,7 @@ function num(v: string): number {
 export default function CreatorProfilePage() {
   const { user } = useAuth();
   const uid = user?.uid ?? '';
+  const { pushToast } = useToast();
 
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -142,120 +143,129 @@ export default function CreatorProfilePage() {
   return (
     <RequireVerified>
       <RequireRole allow={['creator', 'admin']}>
-        <main>
-          <h1>Creator profile</h1>
-          <p>
-            <Link href="/creator/dashboard">← Back to dashboard</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Creator profile</Heading>
+              <ButtonLink href="/creator/dashboard" variant="secondary" size="sm">
+                ← Back to dashboard
+              </ButtonLink>
+              {profile ? (
+                <Text color="muted">
+                  Verification status:{' '}
+                  <Badge variant={profile.verificationStatus === 'verified' ? 'success' : profile.verificationStatus === 'pending' ? 'warning' : 'neutral'}>
+                    {profile.verificationStatus}
+                  </Badge>
+                </Text>
+              ) : null}
+            </Stack>
 
-          {profile ? (
-            <p style={{ opacity: 0.8 }}>
-              Verification status: <strong>{profile.verificationStatus}</strong>
-            </p>
-          ) : null}
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+            <Card>
+              <Stack
+                as="form"
+                gap={5}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setErrMsg(null);
+                  setSaving(true);
+                  try {
+                    await callUpdateCreatorProfile(payload);
+                    await refresh();
+                    pushToast({ title: 'Profile saved', variant: 'success' });
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed to save');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                <Heading level={2}>Basics</Heading>
 
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setErrMsg(null);
-              setSaving(true);
-              try {
-                await callUpdateCreatorProfile(payload);
-                await refresh();
-                alert('Saved.');
-              } catch (e: any) {
-                setErrMsg(e?.message ?? 'Failed to save');
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            <div style={{ marginTop: 12 }}>
-              <label>Display name</label>
-              <br />
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={{ width: 360 }} />
-            </div>
+                <Field label="Display name" htmlFor="displayName" required>
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Bio</label>
-              <br />
-              <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} style={{ width: 480 }} />
-            </div>
+                <Field label="Bio" htmlFor="bio">
+                  <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={4} />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Niches (comma-separated)</label>
-              <br />
-              <input value={nichesCsv} onChange={(e) => setNichesCsv(e.target.value)} style={{ width: 480 }} />
-            </div>
+                <Field label="Niches (comma-separated)" htmlFor="nichesCsv" helpText="Example: pop, edm, hip-hop">
+                  <Input id="nichesCsv" value={nichesCsv} onChange={(e) => setNichesCsv(e.target.value)} />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Audience countries (comma-separated, ISO2)</label>
-              <br />
-              <input value={audienceCountriesCsv} onChange={(e) => setAudienceCountriesCsv(e.target.value)} style={{ width: 480 }} />
-            </div>
+                <Field label="Audience countries (comma-separated, ISO2)" htmlFor="audienceCountriesCsv" helpText="Example: US, CA, GB">
+                  <Input
+                    id="audienceCountriesCsv"
+                    value={audienceCountriesCsv}
+                    onChange={(e) => setAudienceCountriesCsv(e.target.value)}
+                    autoComplete="off"
+                  />
+                </Field>
 
-            <h3 style={{ marginTop: 16 }}>Handles</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <label>TikTok</label>
-                <br />
-                <input value={tiktokHandle} onChange={(e) => setTiktokHandle(e.target.value)} style={{ width: 220 }} />
-              </div>
-              <div>
-                <label>Instagram</label>
-                <br />
-                <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} style={{ width: 220 }} />
-              </div>
-              <div>
-                <label>YouTube</label>
-                <br />
-                <input value={youtubeHandle} onChange={(e) => setYoutubeHandle(e.target.value)} style={{ width: 220 }} />
-              </div>
-            </div>
+                <Heading level={3}>Handles</Heading>
+                <Grid minItemWidth={220} gap={3}>
+                  <Field label="TikTok" htmlFor="tiktokHandle">
+                    <Input id="tiktokHandle" value={tiktokHandle} onChange={(e) => setTiktokHandle(e.target.value)} />
+                  </Field>
+                  <Field label="Instagram" htmlFor="instagramHandle">
+                    <Input id="instagramHandle" value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} />
+                  </Field>
+                  <Field label="YouTube" htmlFor="youtubeHandle">
+                    <Input id="youtubeHandle" value={youtubeHandle} onChange={(e) => setYoutubeHandle(e.target.value)} />
+                  </Field>
+                </Grid>
 
-            <h3 style={{ marginTop: 16 }}>Self-reported metrics</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <label>TikTok followers</label>
-                <br />
-                <input value={tiktokFollowers} onChange={(e) => setTiktokFollowers(e.target.value)} style={{ width: 140 }} />
-              </div>
-              <div>
-                <label>TikTok avg views</label>
-                <br />
-                <input value={tiktokAvgViews} onChange={(e) => setTiktokAvgViews(e.target.value)} style={{ width: 140 }} />
-              </div>
-              <div>
-                <label>Instagram followers</label>
-                <br />
-                <input value={instagramFollowers} onChange={(e) => setInstagramFollowers(e.target.value)} style={{ width: 140 }} />
-              </div>
-              <div>
-                <label>Instagram avg views</label>
-                <br />
-                <input value={instagramAvgViews} onChange={(e) => setInstagramAvgViews(e.target.value)} style={{ width: 140 }} />
-              </div>
-              <div>
-                <label>YouTube subs</label>
-                <br />
-                <input value={youtubeSubscribers} onChange={(e) => setYoutubeSubscribers(e.target.value)} style={{ width: 140 }} />
-              </div>
-              <div>
-                <label>YouTube avg views</label>
-                <br />
-                <input value={youtubeAvgViews} onChange={(e) => setYoutubeAvgViews(e.target.value)} style={{ width: 140 }} />
-              </div>
-            </div>
+                <Heading level={3}>Self-reported metrics</Heading>
+                <Grid minItemWidth={160} gap={3}>
+                  <Field label="TikTok followers" htmlFor="tiktokFollowers">
+                    <Input id="tiktokFollowers" value={tiktokFollowers} onChange={(e) => setTiktokFollowers(e.target.value)} inputMode="numeric" />
+                  </Field>
+                  <Field label="TikTok avg views" htmlFor="tiktokAvgViews">
+                    <Input id="tiktokAvgViews" value={tiktokAvgViews} onChange={(e) => setTiktokAvgViews(e.target.value)} inputMode="numeric" />
+                  </Field>
+                  <Field label="Instagram followers" htmlFor="instagramFollowers">
+                    <Input
+                      id="instagramFollowers"
+                      value={instagramFollowers}
+                      onChange={(e) => setInstagramFollowers(e.target.value)}
+                      inputMode="numeric"
+                    />
+                  </Field>
+                  <Field label="Instagram avg views" htmlFor="instagramAvgViews">
+                    <Input
+                      id="instagramAvgViews"
+                      value={instagramAvgViews}
+                      onChange={(e) => setInstagramAvgViews(e.target.value)}
+                      inputMode="numeric"
+                    />
+                  </Field>
+                  <Field label="YouTube subs" htmlFor="youtubeSubscribers">
+                    <Input
+                      id="youtubeSubscribers"
+                      value={youtubeSubscribers}
+                      onChange={(e) => setYoutubeSubscribers(e.target.value)}
+                      inputMode="numeric"
+                    />
+                  </Field>
+                  <Field label="YouTube avg views" htmlFor="youtubeAvgViews">
+                    <Input id="youtubeAvgViews" value={youtubeAvgViews} onChange={(e) => setYoutubeAvgViews(e.target.value)} inputMode="numeric" />
+                  </Field>
+                </Grid>
 
-            <div style={{ marginTop: 16 }}>
-              <button disabled={saving || !changed} type="submit">
-                {saving ? 'Saving…' : 'Save profile'}
-              </button>
-            </div>
-          </form>
-        </main>
+                <Stack gap={2}>
+                  <div>
+                    <Button disabled={saving || !changed} type="submit" loading={saving}>
+                      Save profile
+                    </Button>
+                  </div>
+                  {!changed ? <Text size="sm" color="muted">No changes to save.</Text> : null}
+                </Stack>
+              </Stack>
+            </Card>
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

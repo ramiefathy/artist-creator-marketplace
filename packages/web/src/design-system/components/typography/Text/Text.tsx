@@ -1,33 +1,33 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/design-system/utils';
 import styles from './Text.module.css';
 
-type TextSize = 'sm' | 'md' | 'lg';
-type TextColor = 'default' | 'muted' | 'subtle' | 'error';
+export type TextSize = 'sm' | 'md' | 'lg';
+export type TextColor = 'default' | 'muted' | 'subtle' | 'error';
+export type TextWhitespace = 'normal' | 'preWrap';
 
-type TextOwnProps<TElement extends React.ElementType> = {
-  as?: TElement;
+export type TextProps = {
+  as?: 'p' | 'span' | 'div';
   size?: TextSize;
   color?: TextColor;
+  whitespace?: TextWhitespace;
   className?: string;
   children: React.ReactNode;
-};
+} & React.HTMLAttributes<HTMLElement>;
 
-export type TextProps<TElement extends React.ElementType = 'p'> = TextOwnProps<TElement> &
-  Omit<React.ComponentPropsWithoutRef<TElement>, keyof TextOwnProps<TElement>>;
-
-export function Text<TElement extends React.ElementType = 'p'>({
-  as,
+export function Text({
+  as: Component = 'p',
   size = 'md',
   color = 'default',
+  whitespace = 'normal',
   className,
   children,
   ...props
-}: TextProps<TElement>) {
-  const Component = as ?? 'p';
+}: TextProps) {
   return (
-    <Component className={[styles.text, styles[size], styles[color], className].filter(Boolean).join(' ')} {...props}>
+    <Component className={cn(styles.text, styles[size], styles[color], whitespace === 'preWrap' && styles.preWrap, className)} {...props}>
       {children}
     </Component>
   );

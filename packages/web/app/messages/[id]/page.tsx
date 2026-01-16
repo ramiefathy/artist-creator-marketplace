@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { useAuth } from '@/components/AuthProvider';
 import { callSendMessage } from '@/lib/callables';
+import { Button, Card, Field, Heading, Inline, Section, Stack, Text, Textarea } from '@/design-system';
 
 type Thread = { threadId: string; participants: string[]; campaignId: string; contractId: string | null };
 type Message = { messageId: string; senderUid: string; body: string; createdAt: string };
@@ -45,59 +46,73 @@ export default function ThreadPage({ params }: { params: { id: string } }) {
 
   return (
     <RequireVerified>
-      <main>
-        <h1>Thread</h1>
-        <p>
-          <Link href="/messages">← Back to messages</Link>
-        </p>
-        {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+      <Section as="section" size="md">
+        <Stack gap={6}>
+          <Stack gap={2}>
+            <Heading level={1}>Thread</Heading>
+            <Text>
+              <Link href="/messages">← Back to messages</Link>
+            </Text>
+            {thread ? (
+              <Text size="sm" color="muted">
+                Thread: {thread.threadId} | Campaign: {thread.campaignId} | Contract: {thread.contractId ?? '—'}
+              </Text>
+            ) : null}
+          </Stack>
 
-        {thread ? (
-          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 12 }}>
-            Thread: {thread.threadId} | Campaign: {thread.campaignId} | Contract: {thread.contractId ?? '—'}
-          </div>
-        ) : null}
+          <Inline gap={3} wrap>
+            <Button variant="secondary" onClick={() => refresh().catch(() => undefined)}>
+              Refresh
+            </Button>
+          </Inline>
 
-        <button onClick={() => refresh().catch(() => undefined)}>Refresh</button>
+          {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-        <div style={{ marginTop: 12, border: '1px solid #eee', borderRadius: 8, padding: 12, maxWidth: 720 }}>
-          {messages.length === 0 ? <p>No messages.</p> : null}
-          {messages.map((m) => (
-            <div key={m.messageId} style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
-                <strong>{m.senderUid === uid ? 'You' : m.senderUid}</strong> — {m.createdAt}
-              </div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
+          <Card data-flux-zone="tables">
+            <Stack gap={3}>
+              {messages.length === 0 ? <Text>No messages.</Text> : null}
+              {messages.map((m) => (
+                <Stack key={m.messageId} gap={1}>
+                  <Text size="sm" color="muted">
+                    <strong>{m.senderUid === uid ? 'You' : m.senderUid}</strong> — {m.createdAt}
+                  </Text>
+                  <Text whitespace="preWrap">{m.body}</Text>
+                </Stack>
+              ))}
+            </Stack>
+          </Card>
+
+          <Stack
+            as="form"
+            gap={3}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setErrMsg(null);
+              if (!body.trim()) return;
+              setSending(true);
+              try {
+                await callSendMessage({ threadId, body: body.trim() });
+                setBody('');
+                await refresh();
+              } catch (e: any) {
+                setErrMsg(e?.message ?? 'Failed to send');
+              } finally {
+                setSending(false);
+              }
+            }}
+            data-flux-zone="forms"
+          >
+            <Field label="Message" htmlFor="message">
+              <Textarea id="message" rows={3} value={body} onChange={(e) => setBody(e.target.value)} />
+            </Field>
+            <div>
+              <Button disabled={sending} type="submit" loading={sending}>
+                Send
+              </Button>
             </div>
-          ))}
-        </div>
-
-        <form
-          style={{ marginTop: 12 }}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setErrMsg(null);
-            if (!body.trim()) return;
-            setSending(true);
-            try {
-              await callSendMessage({ threadId, body: body.trim() });
-              setBody('');
-              await refresh();
-            } catch (e: any) {
-              setErrMsg(e?.message ?? 'Failed to send');
-            } finally {
-              setSending(false);
-            }
-          }}
-        >
-          <textarea rows={3} value={body} onChange={(e) => setBody(e.target.value)} style={{ width: 720, maxWidth: '100%' }} />
-          <div style={{ marginTop: 8 }}>
-            <button disabled={sending} type="submit">
-              {sending ? 'Sending…' : 'Send'}
-            </button>
-          </div>
-        </form>
-      </main>
+          </Stack>
+        </Stack>
+      </Section>
     </RequireVerified>
   );
 }

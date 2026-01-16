@@ -6,6 +6,7 @@ import { collection, getDocs, limit, orderBy, query, where } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
+import { Badge, Button, ButtonLink, DataTable, Heading, Section, Stack, Text } from '@/design-system';
 
 type Dispute = {
   disputeId: string;
@@ -35,29 +36,59 @@ export default function AdminDisputesPage() {
   return (
     <RequireVerified>
       <RequireRole allow={['admin']}>
-        <main>
-          <h1>Disputes</h1>
-          <p>
-            <Link href="/admin/dashboard">← Back to admin dashboard</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Disputes</Heading>
+              <ButtonLink href="/admin/dashboard" variant="secondary" size="sm">
+                ← Back to admin dashboard
+              </ButtonLink>
+            </Stack>
 
-          <button onClick={() => refresh().catch(() => undefined)}>Refresh</button>
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+            <Stack gap={3}>
+              <div>
+                <Button variant="secondary" size="sm" onClick={() => refresh().catch(() => undefined)}>
+                  Refresh
+                </Button>
+              </div>
+              {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {items.length === 0 ? <p>No open disputes.</p> : null}
-
-          <ul>
-            {items.map((d) => (
-              <li key={d.disputeId} style={{ marginBottom: 10 }}>
-                <Link href={`/admin/disputes/${d.disputeId}`}>{d.disputeId}</Link>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  Status: {d.status} | Reason: {d.reasonCode} | Contract: {d.contractId}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.6 }}>{d.createdAt}</div>
-              </li>
-            ))}
-          </ul>
-        </main>
+              <DataTable
+                caption="Open and under-review disputes."
+                columns={[
+                  {
+                    key: 'disputeId',
+                    header: 'Dispute',
+                    cell: (d) => <Link href={`/admin/disputes/${d.disputeId}`}>{d.disputeId}</Link>
+                  },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    cell: (d) => <Badge variant={d.status === 'open' ? 'warning' : 'info'}>{d.status}</Badge>
+                  },
+                  {
+                    key: 'reasonCode',
+                    header: 'Reason',
+                    cell: (d) => <Text as="span" color="muted">{d.reasonCode}</Text>
+                  },
+                  {
+                    key: 'contractId',
+                    header: 'Contract',
+                    cell: (d) => <Text as="span" color="muted">{d.contractId}</Text>
+                  },
+                  {
+                    key: 'createdAt',
+                    header: 'Created',
+                    cell: (d) => <Text as="span" color="subtle">{d.createdAt}</Text>
+                  }
+                ]}
+                data={items}
+                getRowKey={(d) => d.disputeId}
+                emptyState={<Text color="muted">No open disputes.</Text>}
+              />
+            </Stack>
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callAdminResolveDispute, callGetDisputeEvidenceUrls } from '@/lib/callables';
+import { Badge, Button, ButtonLink, Card, Field, Heading, Input, Section, Select, Stack, Text, Textarea, useToast } from '@/design-system';
 
 type Dispute = {
   disputeId: string;
@@ -31,6 +32,8 @@ type Contract = {
 
 export default function AdminDisputeDetailPage({ params }: { params: { id: string } }) {
   const disputeId = params.id;
+
+  const { pushToast } = useToast();
 
   const [dispute, setDispute] = useState<Dispute | null>(null);
   const [contract, setContract] = useState<Contract | null>(null);
@@ -69,144 +72,176 @@ export default function AdminDisputeDetailPage({ params }: { params: { id: strin
   return (
     <RequireVerified>
       <RequireRole allow={['admin']}>
-        <main>
-          <h1>Dispute: {disputeId}</h1>
-          <p>
-            <Link href="/admin/disputes">← Back to disputes</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Dispute</Heading>
+              <Text color="muted">
+                ID: <Text as="span" color="default">{disputeId}</Text>
+              </Text>
+              <ButtonLink href="/admin/disputes" variant="secondary" size="sm">
+                ← Back to disputes
+              </ButtonLink>
+            </Stack>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {dispute ? (
-            <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, maxWidth: 820 }}>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>Status: {dispute.status}</div>
-              <div style={{ marginTop: 8 }}>
-                <strong>Reason:</strong> {dispute.reasonCode}
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <strong>Description:</strong>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{dispute.description}</div>
-              </div>
+            {dispute ? (
+              <Card>
+                <Stack gap={4}>
+                  <Stack gap={2}>
+                    <Text color="muted">Status</Text>
+                    <div>
+                      <Badge variant={dispute.status === 'open' ? 'warning' : dispute.status === 'under_review' ? 'info' : 'neutral'}>
+                        {dispute.status}
+                      </Badge>
+                    </div>
+                  </Stack>
 
-              <div style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-                Contract: <Link href={`/artist/contracts/${dispute.contractId}`}>{dispute.contractId}</Link> (artist view)
-                {' | '}
-                <Link href={`/creator/contracts/${dispute.contractId}`}>creator view</Link>
-              </div>
+                  <Stack gap={1}>
+                    <Text color="muted">Reason</Text>
+                    <Text as="div">{dispute.reasonCode}</Text>
+                  </Stack>
 
-              {contract ? (
-                <div style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-                  Contract status: {contract.status} | Payment: {contract.stripe?.paymentStatus ?? 'n/a'} | Payout transfer: {contract.payout?.transferStatus ?? 'n/a'} | Total: ${
-                    (totalCents / 100).toFixed(2)
+                  <Stack gap={1}>
+                    <Text color="muted">Description</Text>
+                    <Text as="div" whitespace="preWrap">
+                      {dispute.description}
+                    </Text>
+                  </Stack>
+
+                  <Stack gap={1}>
+                    <Text color="muted">Contract</Text>
+                    <Text as="div">
+                      <Link href={`/artist/contracts/${dispute.contractId}`}>{dispute.contractId}</Link>{' '}
+                      <Text as="span" color="muted">
+                        (artist view)
+                      </Text>{' '}
+                      · <Link href={`/creator/contracts/${dispute.contractId}`}>creator view</Link>
+                    </Text>
+                    {contract ? (
+                      <Text size="sm" color="muted">
+                        Contract status: {contract.status} · Payment: {contract.stripe?.paymentStatus ?? 'n/a'} · Payout transfer:{' '}
+                        {contract.payout?.transferStatus ?? 'n/a'} · Total: ${(totalCents / 100).toFixed(2)}
+                      </Text>
+                    ) : null}
+                  </Stack>
+
+                  <Stack gap={2}>
+                    <Heading level={3}>Evidence</Heading>
+                    <Text size="sm" color="muted">
+                      Evidence is stored in Firebase Storage and accessed via signed URLs.
+                    </Text>
+                    <Stack gap={2}>
+                      <div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={async () => {
+                            setErrMsg(null);
+                            try {
+                              const res: any = await callGetDisputeEvidenceUrls({ disputeId });
+                              setEvidenceUrls((res.data as any)?.urls ?? []);
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed to fetch evidence URLs');
+                            }
+                          }}
+                        >
+                          Load evidence URLs
+                        </Button>
+                      </div>
+                      {dispute.evidencePaths?.length ? (
+                        <Text size="sm" color="muted">
+                          Files: {dispute.evidencePaths.length}
+                        </Text>
+                      ) : null}
+                    </Stack>
+
+                    {evidenceUrls.length ? (
+                      <ul>
+                        {evidenceUrls.map((u) => (
+                          <li key={u}>
+                            <a href={u} target="_blank" rel="noreferrer">
+                              Open
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Text size="sm" color="muted">
+                        No evidence URLs loaded.
+                      </Text>
+                    )}
+                  </Stack>
+                </Stack>
+              </Card>
+            ) : (
+              <Text color="muted">Loading…</Text>
+            )}
+
+            <Card>
+              <Stack
+                as="form"
+                gap={4}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setErrMsg(null);
+                  setBusy(true);
+                  try {
+                    await callAdminResolveDispute({
+                      disputeId,
+                      outcome,
+                      refundCents: Number(refundCents),
+                      notes: notes.trim() || null
+                    });
+                    await refresh();
+                    pushToast({ title: 'Dispute resolved', variant: 'success' });
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed to resolve');
+                  } finally {
+                    setBusy(false);
                   }
-                </div>
-              ) : null}
-
-              <h3 style={{ marginTop: 16 }}>Evidence</h3>
-              <p style={{ fontSize: 12, opacity: 0.8 }}>Evidence is stored in Firebase Storage and accessed via signed URLs.</p>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button
-                  onClick={async () => {
-                    setErrMsg(null);
-                    try {
-                      const res: any = await callGetDisputeEvidenceUrls({ disputeId });
-                      setEvidenceUrls((res.data as any)?.urls ?? []);
-                    } catch (e: any) {
-                      setErrMsg(e?.message ?? 'Failed to fetch evidence URLs');
-                    }
-                  }}
-                >
-                  Load evidence URLs
-                </button>
-                {dispute.evidencePaths?.length ? <span style={{ fontSize: 12, opacity: 0.7 }}>Files: {dispute.evidencePaths.length}</span> : null}
-              </div>
-              {evidenceUrls.length ? (
-                <ul>
-                  {evidenceUrls.map((u) => (
-                    <li key={u}>
-                      <a href={u} target="_blank" rel="noreferrer">
-                        Open
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p style={{ fontSize: 12, opacity: 0.7 }}>No evidence URLs loaded.</p>
-              )}
-            </div>
-          ) : (
-            <p>Loading…</p>
-          )}
-
-          <h2 style={{ marginTop: 24 }}>Resolve dispute</h2>
-
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setErrMsg(null);
-              setBusy(true);
-              try {
-                await callAdminResolveDispute({
-                  disputeId,
-                  outcome,
-                  refundCents: Number(refundCents),
-                  notes: notes.trim() || null
-                });
-                await refresh();
-                alert('Resolved.');
-              } catch (e: any) {
-                setErrMsg(e?.message ?? 'Failed to resolve');
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            <div style={{ marginTop: 8 }}>
-              <label>Outcome</label>
-              <br />
-              <select
-                value={outcome}
-                onChange={(e) => {
-                  const v = e.target.value as any;
-                  setOutcome(v);
-                  setRefundCents(suggestedRefundCents);
                 }}
               >
-                <option value="resolved_no_refund">Resolved — no refund</option>
-                <option value="resolved_refund">Resolved — full refund</option>
-                <option value="resolved_partial_refund">Resolved — partial refund</option>
-              </select>
-            </div>
+                <Heading level={2}>Resolve dispute</Heading>
 
-            <div style={{ marginTop: 8 }}>
-              <label>Refund cents</label>
-              <br />
-              <input value={refundCents} onChange={(e) => setRefundCents(e.target.value)} style={{ width: 160 }} />
-              <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.7 }}>
-                (${(Number(refundCents || '0') / 100).toFixed(2)})
-              </span>
-              {totalCents ? (
-                <span style={{ marginLeft: 12, fontSize: 12, opacity: 0.7 }}>
-                  Total: ${
-                    (totalCents / 100).toFixed(2)
-                  }
-                </span>
-              ) : null}
-            </div>
+                <Field label="Outcome" htmlFor="outcome" required>
+                  <Select
+                    id="outcome"
+                    value={outcome}
+                    onChange={(e) => {
+                      const v = e.target.value as any;
+                      setOutcome(v);
+                      setRefundCents(suggestedRefundCents);
+                    }}
+                  >
+                    <option value="resolved_no_refund">Resolved — no refund</option>
+                    <option value="resolved_refund">Resolved — full refund</option>
+                    <option value="resolved_partial_refund">Resolved — partial refund</option>
+                  </Select>
+                </Field>
 
-            <div style={{ marginTop: 8 }}>
-              <label>Notes (optional)</label>
-              <br />
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} style={{ width: 620, maxWidth: '100%' }} />
-            </div>
+                <Field
+                  label="Refund cents"
+                  htmlFor="refundCents"
+                  helpText={`$${(Number(refundCents || '0') / 100).toFixed(2)}${totalCents ? ` · Total: $${(totalCents / 100).toFixed(2)}` : ''}`}
+                >
+                  <Input id="refundCents" value={refundCents} onChange={(e) => setRefundCents(e.target.value)} inputMode="numeric" />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <button disabled={busy} type="submit">
-                {busy ? 'Resolving…' : 'Resolve'}
-              </button>
-            </div>
-          </form>
-        </main>
+                <Field label="Notes (optional)" htmlFor="notes">
+                  <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
+                </Field>
+
+                <div>
+                  <Button disabled={busy} type="submit" loading={busy}>
+                    Resolve
+                  </Button>
+                </div>
+              </Stack>
+            </Card>
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

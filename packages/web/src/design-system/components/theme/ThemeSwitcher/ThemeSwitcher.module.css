@@ -1,19 +1,20 @@
 .container {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  right: var(--spacing-4);
+  bottom: var(--spacing-4);
   z-index: 50;
 }
 
 .trigger {
-  width: 44px;
-  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 0.9rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  color: var(--color-text);
   box-shadow: var(--shadow-md);
-  display: grid;
-  place-items: center;
   cursor: pointer;
 }
 
@@ -21,15 +22,18 @@
   border-color: var(--color-border-strong);
 }
 
-.icon {
-  font-size: 18px;
+.triggerLabel {
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
 }
 
 .popover {
   position: absolute;
   right: 0;
-  bottom: calc(100% + 0.5rem);
-  width: 220px;
+  bottom: calc(100% + var(--spacing-2));
+  min-width: 220px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -37,67 +41,39 @@
   overflow: hidden;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0.75rem 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.previewLabel {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
 .options {
-  padding: 0.5rem;
-  display: grid;
-  gap: 0.25rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.5rem 0.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  border: 0;
   background: transparent;
-  cursor: pointer;
   color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
 }
 
 .option:hover {
-  background: var(--color-bg-subtle);
-  border-color: var(--color-border);
+  background: var(--color-surface-hover);
 }
 
 .active {
-  border-color: var(--color-border-strong);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-}
-
-.optionIcon {
-  width: 20px;
-  display: inline-flex;
-  justify-content: center;
+  background: var(--color-surface-hover);
 }
 
 .optionLabel {
-  flex: 1;
-  text-align: left;
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
 }
 
 .checkmark {
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  font-weight: 800;
 }
 

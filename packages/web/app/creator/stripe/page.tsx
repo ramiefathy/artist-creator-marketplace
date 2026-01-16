@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callCreatorStartStripeOnboarding, callCreatorRefreshStripeOnboarding, callCreatorSyncStripeOnboardingStatus } from '@/lib/callables';
+import { Badge, Button, ButtonLink, Heading, Inline, Section, Stack, Text } from '@/design-system';
 
 export default function CreatorStripePage() {
   const [status, setStatus] = useState<string | null>(null);
@@ -22,49 +22,61 @@ export default function CreatorStripePage() {
   return (
     <RequireVerified>
       <RequireRole allow={['creator', 'admin']}>
-        <main>
-          <p>
-            <Link href="/creator/dashboard">← Back</Link>
-          </p>
-          <h1>Stripe Connect onboarding</h1>
-          <p>Status: {status ?? 'unknown'}</p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Stripe Connect onboarding</Heading>
+              <ButtonLink href="/creator/dashboard" variant="secondary" size="sm">
+                ← Back to dashboard
+              </ButtonLink>
+              <Text color="muted">
+                Status:{' '}
+                <Badge variant={status === 'active' ? 'success' : status ? 'info' : 'neutral'}>
+                  {status ?? 'unknown'}
+                </Badge>
+              </Text>
+            </Stack>
 
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button
-              onClick={async () => {
-                setErrMsg(null);
-                try {
-                  const res: any = await callCreatorStartStripeOnboarding({});
-                  const url = (res.data as any)?.url as string;
-                  window.location.href = url;
-                } catch (e: any) {
-                  setErrMsg(e?.message ?? 'Failed');
-                }
-              }}
-            >
-              Start onboarding
-            </button>
+            <Inline gap={3} wrap>
+              <Button
+                onClick={async () => {
+                  setErrMsg(null);
+                  try {
+                    const res: any = await callCreatorStartStripeOnboarding({});
+                    const url = (res.data as any)?.url as string;
+                    window.location.href = url;
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed');
+                  }
+                }}
+              >
+                Start onboarding
+              </Button>
 
-            <button
-              onClick={async () => {
-                setErrMsg(null);
-                try {
-                  const res: any = await callCreatorRefreshStripeOnboarding({});
-                  const url = (res.data as any)?.url as string;
-                  window.location.href = url;
-                } catch (e: any) {
-                  setErrMsg(e?.message ?? 'Failed');
-                }
-              }}
-            >
-              Refresh onboarding link
-            </button>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  setErrMsg(null);
+                  try {
+                    const res: any = await callCreatorRefreshStripeOnboarding({});
+                    const url = (res.data as any)?.url as string;
+                    window.location.href = url;
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed');
+                  }
+                }}
+              >
+                Refresh onboarding link
+              </Button>
 
-            <button onClick={() => refresh().catch(() => undefined)}>Refresh status</button>
-          </div>
+              <Button variant="secondary" onClick={() => refresh().catch(() => undefined)}>
+                Refresh status
+              </Button>
+            </Inline>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
-        </main>
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

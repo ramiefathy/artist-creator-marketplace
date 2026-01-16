@@ -8,6 +8,7 @@ import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/components/AuthProvider';
 import { callUpdateArtistProfile } from '@/lib/callables';
+import { Button, Card, Field, Heading, Section, Select, Stack, Text, Input, useToast } from '@/design-system';
 
 type ArtistProfile = {
   uid: string;
@@ -20,6 +21,7 @@ type ArtistProfile = {
 export default function ArtistProfilePage() {
   const { user } = useAuth();
   const uid = user?.uid ?? '';
+  const { pushToast } = useToast();
 
   const [profile, setProfile] = useState<ArtistProfile | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -62,66 +64,66 @@ export default function ArtistProfilePage() {
 
   return (
     <RequireVerified>
-      <RequireRole allow={['artist', 'admin']}> 
-        <main>
-          <h1>Artist profile</h1>
-          <p>
-            <Link href="/artist/dashboard">← Back to dashboard</Link>
-          </p>
+      <RequireRole allow={['artist', 'admin']}>
+        <Section as="section" size="md">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Artist profile</Heading>
+              <Text>
+                <Link href="/artist/dashboard">← Back to dashboard</Link>
+              </Text>
+            </Stack>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setErrMsg(null);
-              setSaving(true);
-              try {
-                await callUpdateArtistProfile({ displayName, entityType, country, timezone });
-                await refresh();
-                alert('Saved.');
-              } catch (e: any) {
-                setErrMsg(e?.message ?? 'Failed to save');
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            <div style={{ marginTop: 12 }}>
-              <label>Display name</label>
-              <br />
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={{ width: 360 }} />
-            </div>
+            <Card data-flux-zone="forms">
+              <Stack
+                as="form"
+                gap={4}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setErrMsg(null);
+                  setSaving(true);
+                  try {
+                    await callUpdateArtistProfile({ displayName, entityType, country, timezone });
+                    await refresh();
+                    pushToast({ title: 'Profile saved', variant: 'success' });
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed to save');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                <Field label="Display name" htmlFor="displayName" required>
+                  <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Entity type</label>
-              <br />
-              <select value={entityType} onChange={(e) => setEntityType(e.target.value as any)}>
-                <option value="individual">Individual</option>
-                <option value="label">Label</option>
-                <option value="management">Management</option>
-              </select>
-            </div>
+                <Field label="Entity type" htmlFor="entityType" required>
+                  <Select id="entityType" value={entityType} onChange={(e) => setEntityType(e.target.value as any)}>
+                    <option value="individual">Individual</option>
+                    <option value="label">Label</option>
+                    <option value="management">Management</option>
+                  </Select>
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Country</label>
-              <br />
-              <input value={country} onChange={(e) => setCountry(e.target.value)} style={{ width: 180 }} />
-            </div>
+                <Field label="Country" htmlFor="country" required helpText="2-letter code (e.g. US)">
+                  <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
+                </Field>
 
-            <div style={{ marginTop: 12 }}>
-              <label>Timezone (IANA)</label>
-              <br />
-              <input value={timezone} onChange={(e) => setTimezone(e.target.value)} style={{ width: 260 }} />
-            </div>
+                <Field label="Timezone (IANA)" htmlFor="timezone" required>
+                  <Input id="timezone" value={timezone} onChange={(e) => setTimezone(e.target.value)} />
+                </Field>
 
-            <div style={{ marginTop: 16 }}>
-              <button disabled={saving || !changed} type="submit">
-                {saving ? 'Saving…' : 'Save profile'}
-              </button>
-            </div>
-          </form>
-        </main>
+                <div>
+                  <Button disabled={saving || !changed} type="submit" loading={saving}>
+                    Save profile
+                  </Button>
+                </div>
+              </Stack>
+            </Card>
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

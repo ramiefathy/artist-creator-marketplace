@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callSubmitOffer, callGetTrackPreviewUrl } from '@/lib/callables';
+import { Button, ButtonLink, Card, Field, Heading, Input, Section, Stack, Text, Textarea, useToast } from '@/design-system';
 
 export default function CreatorCampaignPage({ params }: { params: { id: string } }) {
   const campaignId = params.id;
+  const { pushToast } = useToast();
   const [campaign, setCampaign] = useState<any | null>(null);
   const [priceCents, setPriceCents] = useState(5000);
   const [message, setMessage] = useState('');
@@ -28,68 +29,90 @@ export default function CreatorCampaignPage({ params }: { params: { id: string }
   return (
     <RequireVerified>
       <RequireRole allow={['creator', 'admin']}>
-        <main>
-          <p>
-            <Link href="/creator/dashboard">← Back</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Campaign</Heading>
+              <ButtonLink href="/creator/dashboard" variant="secondary" size="sm">
+                ← Back to dashboard
+              </ButtonLink>
+            </Stack>
 
-          <h1>Campaign</h1>
-          {!campaign ? <p>Not found.</p> : null}
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
+            {!campaign ? <Text color="muted">Not found.</Text> : null}
 
-          {campaign ? (
-            <>
-              <p><strong>{campaign.title}</strong></p>
-              <p>Brief: {campaign.brief}</p>
-              <p>Max price: ${(campaign.pricing.maxPricePerDeliverableCents / 100).toFixed(2)}</p>
+            {campaign ? (
+              <Stack gap={4}>
+                <Card>
+                  <Stack gap={2}>
+                    <Heading level={2}>{campaign.title}</Heading>
+                    <Text color="muted">{campaign.brief}</Text>
+                    <Text size="sm" color="muted">
+                      Max price: ${(campaign.pricing.maxPricePerDeliverableCents / 100).toFixed(2)}
+                    </Text>
+                    <div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={async () => {
+                          setErrMsg(null);
+                          try {
+                            const res: any = await callGetTrackPreviewUrl({ trackId: campaign.trackId });
+                            const url = (res.data as any)?.url as string;
+                            window.open(url, '_blank');
+                          } catch (e: any) {
+                            setErrMsg(e?.message ?? 'Failed');
+                          }
+                        }}
+                      >
+                        Listen to track preview
+                      </Button>
+                    </div>
+                  </Stack>
+                </Card>
 
-              <button
-                onClick={async () => {
-                  setErrMsg(null);
-                  try {
-                    const res: any = await callGetTrackPreviewUrl({ trackId: campaign.trackId });
-                    const url = (res.data as any)?.url as string;
-                    window.open(url, '_blank');
-                  } catch (e: any) {
-                    setErrMsg(e?.message ?? 'Failed');
-                  }
-                }}
-              >
-                Listen to track preview
-              </button>
+                <Card>
+                  <Stack
+                    as="form"
+                    gap={4}
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setErrMsg(null);
+                      try {
+                        await callSubmitOffer({ campaignId, priceCents, message: message || null });
+                        pushToast({ title: 'Offer submitted', variant: 'success' });
+                      } catch (e: any) {
+                        setErrMsg(e?.message ?? 'Failed');
+                      }
+                    }}
+                  >
+                    <Heading level={2}>Submit offer</Heading>
 
-              <h2 style={{ marginTop: 24 }}>Submit offer</h2>
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  setErrMsg(null);
-                  try {
-                    await callSubmitOffer({ campaignId, priceCents, message: message || null });
-                    alert('Offer submitted.');
-                  } catch (e: any) {
-                    setErrMsg(e?.message ?? 'Failed');
-                  }
-                }}
-              >
-                <div>
-                  <label>Price (cents)</label>
-                  <br />
-                  <input type="number" min={500} max={500000} value={priceCents} onChange={(e) => setPriceCents(parseInt(e.target.value, 10))} />
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <label>Message (optional)</label>
-                  <br />
-                  <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} />
-                </div>
+                    <Field label="Price (cents)" htmlFor="priceCents" required helpText={`$${(priceCents / 100).toFixed(2)}`}>
+                      <Input
+                        id="priceCents"
+                        type="number"
+                        min={500}
+                        max={500000}
+                        value={priceCents}
+                        onChange={(e) => setPriceCents(parseInt(e.target.value, 10))}
+                        required
+                      />
+                    </Field>
 
-                <button style={{ marginTop: 12 }} type="submit">
-                  Submit offer
-                </button>
-              </form>
-            </>
-          ) : null}
+                    <Field label="Message (optional)" htmlFor="message">
+                      <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} rows={4} />
+                    </Field>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
-        </main>
+                    <div>
+                      <Button type="submit">Submit offer</Button>
+                    </div>
+                  </Stack>
+                </Card>
+              </Stack>
+            ) : null}
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

@@ -1,0 +1,9 @@
+.inline {
+  display: flex;
+  gap: var(--inline-gap, var(--spacing-3));
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+

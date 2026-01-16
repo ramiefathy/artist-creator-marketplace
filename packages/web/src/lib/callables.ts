@@ -47,3 +47,34 @@ export const callAdminSetUserStatus = httpsCallable(functions, 'adminSetUserStat
 export const callAdminChangeUserRole = httpsCallable(functions, 'adminChangeUserRole');
 
 export const callAdminGetCreatorEvidenceUrls = httpsCallable(functions, 'adminGetCreatorEvidenceUrls');
+
+// Social
+export const callSetAccountPrivacy = httpsCallable(functions, 'setAccountPrivacy');
+export const callRequestFollow = httpsCallable(functions, 'requestFollow');
+export const callApproveFollower = httpsCallable(functions, 'approveFollower');
+export const callRemoveFollower = httpsCallable(functions, 'removeFollower');
+export const callUnfollow = httpsCallable(functions, 'unfollow');
+export const callClaimHandle = httpsCallable(functions, 'claimHandle');
+export const callCreatePost = httpsCallable(functions, 'createPost');
+export const callUpdatePost = httpsCallable(functions, 'updatePost');
+export const callDeletePost = httpsCallable(functions, 'deletePost');
+export const callCreateComment = httpsCallable(functions, 'createComment');
+export const callDeleteComment = httpsCallable(functions, 'deleteComment');
+export const callToggleLike = httpsCallable(functions, 'toggleLike');
+
+// Social media
+export const callInitiateMediaUpload = httpsCallable(functions, 'initiateMediaUpload');
+export const callFinalizeMediaUpload = httpsCallable(functions, 'finalizeMediaUpload');
+export const callAttachMediaToPost = httpsCallable(functions, 'attachMediaToPost');
+
+// Reports / moderation
+export const callReportPost = httpsCallable(functions, 'reportPost');
+export const callReportComment = httpsCallable(functions, 'reportComment');
+export const callReportUser = httpsCallable(functions, 'reportUser');
+export const callAdminUpdateReportStatus = httpsCallable(functions, 'adminUpdateReportStatus');
+
+// Safety controls
+export const callBlockUser = httpsCallable(functions, 'blockUser');
+export const callUnblockUser = httpsCallable(functions, 'unblockUser');
+export const callMuteUser = httpsCallable(functions, 'muteUser');
+export const callUnmuteUser = httpsCallable(functions, 'unmuteUser');

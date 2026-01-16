@@ -1,22 +1,18 @@
 .text {
-  margin: 0;
   font-family: var(--font-body);
   color: var(--color-text);
 }
 
 .sm {
   font-size: 0.875rem;
-  line-height: 1.5;
 }
 
 .md {
   font-size: 1rem;
-  line-height: 1.6;
 }
 
 .lg {
   font-size: 1.125rem;
-  line-height: 1.6;
 }
 
 .default {
@@ -35,3 +31,6 @@
   color: var(--color-error);
 }
 
+.preWrap {
+  white-space: pre-wrap;
+}

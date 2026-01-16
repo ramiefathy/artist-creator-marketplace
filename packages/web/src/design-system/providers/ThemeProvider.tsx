@@ -15,9 +15,10 @@ type ThemeContextValue = {
   setPreviewTheme: (theme: ThemeType | null) => void;
 };
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const THEME_COOKIE = 'mcmp-theme-v1';
+const DEFAULT_THEME: ThemeType = 'luma';
 const VALID_THEMES: ThemeType[] = ['noir', 'analog', 'luma', 'flux'];
 
 function setCookie(name: string, value: string, days: number) {
@@ -27,16 +28,21 @@ function setCookie(name: string, value: string, days: number) {
 
 export type ThemeProviderProps = {
   children: React.ReactNode;
-  initialTheme: ThemeType;
+  initialTheme?: ThemeType;
 };
 
-export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
+export function ThemeProvider({ children, initialTheme = DEFAULT_THEME }: ThemeProviderProps) {
   const { user } = useAuth();
-
   const [theme, setThemeState] = useState<ThemeType>(initialTheme);
   const [previewTheme, setPreviewTheme] = useState<ThemeType | null>(null);
 
-  // Load Firestore theme on sign-in (cross-device sync)
+  const activeTheme = previewTheme ?? theme;
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', activeTheme);
+  }, [activeTheme]);
+
+  // Load persisted theme when the user becomes available. This enables cross-device persistence.
   useEffect(() => {
     if (!user?.uid) return;
 
@@ -44,16 +50,12 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
     (async () => {
       const snap = await getDoc(doc(db, 'users', user.uid));
       const fromDb = snap.exists() ? (snap.data() as any).theme : undefined;
-
-      if (cancelled) return;
       if (!VALID_THEMES.includes(fromDb as ThemeType)) return;
 
-      setThemeState((prev) => {
-        if (prev === fromDb) return prev;
+      if (!cancelled && fromDb !== theme) {
+        setThemeState(fromDb as ThemeType);
         setCookie(THEME_COOKIE, fromDb as string, 365);
-        return fromDb as ThemeType;
-      });
-      setPreviewTheme(null);
+      }
     })().catch((error) => {
       console.error('Failed to load theme preference:', error);
     });
@@ -61,42 +63,35 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
-
-  // Active theme is preview if set, otherwise confirmed theme
-  const activeTheme = previewTheme ?? theme;
-
-  // Update HTML attribute when active theme changes
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', activeTheme);
-  }, [activeTheme]);
+  }, [user?.uid, theme]);
 
   const setTheme = useCallback(
     async (newTheme: ThemeType) => {
       if (!VALID_THEMES.includes(newTheme)) return;
 
-      // Update local state immediately
       setThemeState(newTheme);
       setPreviewTheme(null);
-
-      // Persist to cookie
       setCookie(THEME_COOKIE, newTheme, 365);
 
-      // Persist to Firestore via Callable if authenticated (client writes blocked by rules)
-      if (user?.uid) {
-        try {
-          await callSetThemePreference({ theme: newTheme });
-        } catch (error) {
-          console.error('Failed to save theme preference:', error);
-        }
+      if (!user?.uid) return;
+      try {
+        await callSetThemePreference({ theme: newTheme });
+      } catch (error) {
+        // Cookie already set, so user experience is fine even if this fails.
+        console.error('Failed to save theme preference:', error);
       }
     },
     [user?.uid]
   );
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, setTheme, previewTheme, setPreviewTheme }),
-    [theme, setTheme, previewTheme]
+    () => ({
+      theme,
+      setTheme,
+      previewTheme,
+      setPreviewTheme
+    }),
+    [previewTheme, setTheme, theme]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

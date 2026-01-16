@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Label, Text } from '@/design-system/components/typography';
+import { cn } from '@/design-system/utils';
+import { Label } from '@/design-system/components/typography';
+import { Text } from '@/design-system/components/typography';
 import styles from './Field.module.css';
 
 export interface FieldProps {
@@ -10,12 +12,13 @@ export interface FieldProps {
   required?: boolean;
   helpText?: string;
   error?: string;
+  className?: string;
   children: React.ReactNode;
 }
 
-export function Field({ label, htmlFor, required, helpText, error, children }: FieldProps) {
+export function Field({ label, htmlFor, required, helpText, error, className, children }: FieldProps) {
   return (
-    <div className={styles.field}>
+    <div className={cn(styles.field, className)}>
       <Label htmlFor={htmlFor} required={required}>
         {label}
       </Label>

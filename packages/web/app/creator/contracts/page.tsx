@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/components/AuthProvider';
+import { Badge, Button, ButtonLink, DataTable, Heading, Section, Stack, Text } from '@/design-system';
 
 type Contract = {
   contractId: string;
@@ -46,30 +47,61 @@ export default function CreatorContractsPage() {
   return (
     <RequireVerified>
       <RequireRole allow={['creator', 'admin']}>
-        <main>
-          <h1>Creator contracts</h1>
-          <p>
-            <Link href="/creator/dashboard">← Back to dashboard</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Creator contracts</Heading>
+              <ButtonLink href="/creator/dashboard" variant="secondary" size="sm">
+                ← Back to dashboard
+              </ButtonLink>
+            </Stack>
 
-          <button onClick={() => refresh().catch(() => undefined)}>Refresh</button>
+            <Stack gap={3}>
+              <div>
+                <Button variant="secondary" size="sm" onClick={() => refresh().catch(() => undefined)}>
+                  Refresh
+                </Button>
+              </div>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+              {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {items.length === 0 ? <p>No contracts yet.</p> : null}
-
-          <ul>
-            {items.map((c) => (
-              <li key={c.contractId} style={{ marginBottom: 10 }}>
-                <Link href={`/creator/contracts/${c.contractId}`}>{c.contractId}</Link>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  Status: {c.status} | Payment: {c.stripe?.paymentStatus ?? 'n/a'} | Total: ${((c.pricing?.totalPriceCents ?? 0) / 100).toFixed(2)}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.6 }}>{c.createdAt}</div>
-              </li>
-            ))}
-          </ul>
-        </main>
+              <DataTable<Contract>
+                caption="Your most recent contracts."
+                columns={[
+                  {
+                    key: 'contractId',
+                    header: 'Contract',
+                    cell: (c) => <Link href={`/creator/contracts/${c.contractId}`}>{c.contractId}</Link>
+                  },
+                  {
+                    key: 'status',
+                    header: 'Status',
+                    cell: (c) => <Badge variant={c.status === 'completed' ? 'success' : c.status === 'active' ? 'info' : 'neutral'}>{c.status}</Badge>
+                  },
+                  {
+                    key: 'payment',
+                    header: 'Payment',
+                    cell: (c) => <Text as="span" color="muted">{c.stripe?.paymentStatus ?? 'n/a'}</Text>
+                  },
+                  {
+                    key: 'total',
+                    header: 'Total',
+                    align: 'right',
+                    cell: (c) => <Text as="span" color="muted">${((c.pricing?.totalPriceCents ?? 0) / 100).toFixed(2)}</Text>
+                  },
+                  {
+                    key: 'createdAt',
+                    header: 'Created',
+                    cell: (c) => <Text as="span" color="subtle">{c.createdAt}</Text>
+                  }
+                ]}
+                data={items}
+                getRowKey={(c) => c.contractId}
+                emptyState={<Text color="muted">No contracts yet.</Text>}
+              />
+            </Stack>
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

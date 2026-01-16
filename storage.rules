@@ -47,5 +47,17 @@ service firebase.storage {
     match /contracts/{contractId}/{fileName} {
       allow write: if false;
     }
+
+    // Social uploads (any signed-in user, including anonymous auth)
+    // Note: content type is validated server-side during finalize.
+    match /socialUploads/{uploaderUid}/{uploadId}/{fileName} {
+      allow write: if signedIn() && request.auth.uid == uploaderUid
+        && request.resource.size < 150 * 1024 * 1024;
+    }
+
+    // Final social media objects are written by the server only (via Cloud Functions).
+    match /socialMedia/{assetId}/{fileName} {
+      allow write: if false;
+    }
   }
 }

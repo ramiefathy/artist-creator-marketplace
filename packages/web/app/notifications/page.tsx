@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { useAuth } from '@/components/AuthProvider';
 import { callMarkNotificationRead } from '@/lib/callables';
+import { Button, Card, Heading, Inline, Section, Stack, Text } from '@/design-system';
 
 type Notification = {
   notificationId: string;
@@ -42,74 +43,96 @@ export default function NotificationsPage() {
   }, [uid]);
 
   return (
-      <RequireVerified>
-      <main>
-        <h1>Notifications</h1>
-        <p style={{ opacity: 0.8 }}>
-          This page shows the 50 most recent in-app notifications. Clicking a notification marks it read.
-        </p>
+    <RequireVerified>
+      <Section as="section" size="lg">
+        <Stack gap={6}>
+          <Stack gap={2}>
+            <Heading level={1}>Notifications</Heading>
+            <Text color="muted">This page shows the 50 most recent in-app notifications. Opening a notification will mark it read.</Text>
+          </Stack>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-          <button onClick={() => refresh().catch(() => undefined)}>Refresh</button>
-        </div>
+          <Inline gap={3} wrap>
+            <Button variant="secondary" onClick={() => refresh().catch(() => undefined)}>
+              Refresh
+            </Button>
+          </Inline>
 
-        {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+          {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-        {items.length === 0 ? <p>No notifications.</p> : null}
+          {items.length === 0 ? <Text>No notifications.</Text> : null}
 
-        <ul style={{ paddingLeft: 18 }}>
-          {items.map((n) => (
-            <li key={n.notificationId} style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <strong style={{ opacity: n.read ? 0.6 : 1 }}>{n.title}</strong>
-                <span style={{ fontSize: 12, opacity: 0.6 }}>{n.type}</span>
-                {n.read ? <span style={{ fontSize: 12, opacity: 0.6 }}>(read)</span> : null}
-              </div>
-              <div style={{ marginTop: 4, opacity: 0.85 }}>{n.body}</div>
-              <div style={{ marginTop: 6, display: 'flex', gap: 12, alignItems: 'center' }}>
-                <Link
-                  href={n.link}
-                  onClick={async () => {
-                    if (busyId) return;
-                    setBusyId(n.notificationId);
-                    try {
-                      await callMarkNotificationRead({ notificationId: n.notificationId });
-                      await refresh();
-                    } catch {
-                      // read-mark failure should not block navigation
-                    } finally {
-                      setBusyId(null);
-                    }
-                  }}
-                >
-                  Open
-                </Link>
+          {items.length > 0 ? (
+            <Stack gap={3} as="section">
+              {items.map((n) => (
+                <Card key={n.notificationId} data-flux-zone="tables">
+                  <Stack gap={3}>
+                    <Inline gap={2} wrap align="center">
+                      <Text as="span" size="lg" color={n.read ? 'muted' : 'default'}>
+                        <strong>{n.title}</strong>
+                      </Text>
+                      <Text as="span" size="sm" color="muted">
+                        {n.type}
+                      </Text>
+                      {n.read ? (
+                        <Text as="span" size="sm" color="muted">
+                          (read)
+                        </Text>
+                      ) : null}
+                    </Inline>
 
-                {!n.read ? (
-                  <button
-                    disabled={busyId === n.notificationId}
-                    onClick={async () => {
-                      setBusyId(n.notificationId);
-                      try {
-                        await callMarkNotificationRead({ notificationId: n.notificationId });
-                        await refresh();
-                      } catch (e: any) {
-                        setErrMsg(e?.message ?? 'Failed to mark read');
-                      } finally {
-                        setBusyId(null);
-                      }
-                    }}
-                  >
-                    Mark read
-                  </button>
-                ) : null}
+                    <Text>{n.body}</Text>
 
-                <span style={{ fontSize: 12, opacity: 0.6 }}>{n.createdAt}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </main>
-      </RequireVerified>
+                    <Inline gap={3} wrap align="center">
+                      <Link
+                        href={n.link}
+                        onClick={async () => {
+                          if (busyId) return;
+                          setBusyId(n.notificationId);
+                          try {
+                            await callMarkNotificationRead({ notificationId: n.notificationId });
+                            await refresh();
+                          } catch {
+                            // read-mark failure should not block navigation
+                          } finally {
+                            setBusyId(null);
+                          }
+                        }}
+                      >
+                        Open
+                      </Link>
+
+                      {!n.read ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={busyId === n.notificationId}
+                          onClick={async () => {
+                            setBusyId(n.notificationId);
+                            try {
+                              await callMarkNotificationRead({ notificationId: n.notificationId });
+                              await refresh();
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed to mark read');
+                            } finally {
+                              setBusyId(null);
+                            }
+                          }}
+                        >
+                          Mark read
+                        </Button>
+                      ) : null}
+
+                      <Text as="span" size="sm" color="muted">
+                        {n.createdAt}
+                      </Text>
+                    </Inline>
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          ) : null}
+        </Stack>
+      </Section>
+    </RequireVerified>
   );
 }

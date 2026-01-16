@@ -17,6 +17,8 @@
     "deploy:dev": "firebase use dev && npm run build && firebase deploy",
     "deploy:prod": "firebase use prod && npm run build && firebase deploy",
     "test": "npm --workspace functions run test",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-mcmp \"npm --workspace functions run test:rules:jest\"",
+    "test:integration": "npm --workspace functions run build && SOCIAL_ENABLED=true firebase emulators:exec --only auth,functions,firestore,storage --project demo-mcmp \"npm --workspace functions run test:integration:jest\"",
     "dev:web": "npm --workspace packages/web run dev"
   }
 }

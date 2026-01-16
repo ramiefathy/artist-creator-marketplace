@@ -6,6 +6,7 @@ import { collection, getDocs, limit, orderBy, query, where } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { useAuth } from '@/components/AuthProvider';
+import { Button, Card, Heading, Inline, Section, Stack, Text } from '@/design-system';
 
 type Thread = {
   threadId: string;
@@ -39,25 +40,42 @@ export default function MessagesPage() {
 
   return (
     <RequireVerified>
-      <main>
-        <h1>Messages</h1>
-        <p style={{ opacity: 0.8 }}>Threads are created when you submit an offer. Messaging is optional for MVP workflows.</p>
+      <Section as="section" size="lg">
+        <Stack gap={6}>
+          <Stack gap={2}>
+            <Heading level={1}>Messages</Heading>
+            <Text color="muted">Threads are created when you submit an offer. Messaging is optional for MVP workflows.</Text>
+          </Stack>
 
-        <button onClick={() => refresh().catch(() => undefined)}>Refresh</button>
-        {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
+          <Inline gap={3} wrap>
+            <Button variant="secondary" onClick={() => refresh().catch(() => undefined)}>
+              Refresh
+            </Button>
+          </Inline>
 
-        {threads.length === 0 ? <p>No message threads.</p> : null}
+          {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-        <ul>
-          {threads.map((t) => (
-            <li key={t.threadId} style={{ marginBottom: 10 }}>
-              <Link href={`/messages/${t.threadId}`}>{t.threadId}</Link>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>Campaign: {t.campaignId} | Contract: {t.contractId ?? '—'}</div>
-              <div style={{ fontSize: 12, opacity: 0.6 }}>{t.lastMessageAt}</div>
-            </li>
-          ))}
-        </ul>
-      </main>
+          {threads.length === 0 ? <Text>No message threads.</Text> : null}
+
+          {threads.length > 0 ? (
+            <Stack gap={3} as="section" data-flux-zone="tables">
+              {threads.map((t) => (
+                <Card key={t.threadId}>
+                  <Stack gap={2}>
+                    <Link href={`/messages/${t.threadId}`}>{t.threadId}</Link>
+                    <Text size="sm" color="muted">
+                      Campaign: {t.campaignId} | Contract: {t.contractId ?? '—'}
+                    </Text>
+                    <Text size="sm" color="subtle">
+                      {t.lastMessageAt}
+                    </Text>
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          ) : null}
+        </Stack>
+      </Section>
     </RequireVerified>
   );
 }

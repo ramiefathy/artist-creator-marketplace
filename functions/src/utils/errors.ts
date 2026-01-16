@@ -7,6 +7,7 @@ export type ErrorCode =
   | 'INVALID_ARGUMENT'
   | 'NOT_FOUND'
   | 'ALREADY_EXISTS'
+  | 'RESOURCE_EXHAUSTED'
   | 'INTERNAL';
 
 export function err(code: ErrorCode, message: string, details?: Record<string, unknown>): never {

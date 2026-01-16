@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callAdminSetCreatorVerification, callAdminGetCreatorEvidenceUrls } from '@/lib/callables';
+import { Badge, Button, ButtonLink, Card, Field, Heading, Mono, Section, Stack, Text, Textarea, useToast } from '@/design-system';
 
 export default function AdminCreatorPage({ params }: { params: { uid: string } }) {
   const creatorUid = params.uid;
+
+  const { pushToast } = useToast();
 
   const [profile, setProfile] = useState<any | null>(null);
   const [evidence, setEvidence] = useState<{ urls: string[]; paths: string[] } | null>(null);
@@ -36,74 +38,116 @@ export default function AdminCreatorPage({ params }: { params: { uid: string } }
   return (
     <RequireVerified>
       <RequireRole allow={['admin']}>
-        <main>
-          <p>
-            <Link href="/admin/dashboard">← Back</Link>
-          </p>
+        <Section as="section" size="lg">
+          <Stack gap={6}>
+            <Stack gap={2}>
+              <Heading level={1}>Creator verification</Heading>
+              <ButtonLink href="/admin/dashboard" variant="secondary" size="sm">
+                ← Back to admin dashboard
+              </ButtonLink>
+            </Stack>
 
-          <h1>Creator verification</h1>
-          {!profile ? <p>Creator not found.</p> : null}
+            {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {profile ? (
-            <>
-              <p><strong>{profile.displayName}</strong> — status: {profile.verificationStatus}</p>
-              <pre style={{ background: '#f7f7f7', padding: 12, overflowX: 'auto' }}>{JSON.stringify(profile, null, 2)}</pre>
+            {!profile ? <Text color="muted">Creator not found.</Text> : null}
 
-              <h2>Evidence</h2>
-              {!evidence ? <p>No evidence URLs available.</p> : null}
-              {evidence ? (
-                <ul>
-                  {evidence.urls.map((u, idx) => (
-                    <li key={u}>
-                      <a href={u} target="_blank" rel="noreferrer">
-                        Open evidence #{idx + 1}
-                      </a>
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>{evidence.paths[idx]}</div>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+            {profile ? (
+              <Stack gap={4}>
+                <Card>
+                  <Stack gap={2}>
+                    <Heading level={2}>{profile.displayName}</Heading>
+                    <div>
+                      <Badge variant={profile.verificationStatus === 'verified' ? 'success' : profile.verificationStatus === 'pending' ? 'warning' : 'neutral'}>
+                        {profile.verificationStatus}
+                      </Badge>
+                    </div>
+                    <Text size="sm" color="muted">
+                      UID: {creatorUid}
+                    </Text>
+                  </Stack>
+                </Card>
 
-              <div style={{ marginTop: 12 }}>
-                <label>Admin notes</label>
-                <br />
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
-              </div>
+                <Card>
+                  <Stack gap={2}>
+                    <Heading level={2}>Profile (raw)</Heading>
+                    <Mono as="pre">{JSON.stringify(profile, null, 2)}</Mono>
+                  </Stack>
+                </Card>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button
-                  onClick={async () => {
-                    setErrMsg(null);
-                    try {
-                      await callAdminSetCreatorVerification({ creatorUid, status: 'verified', notes: notes || null });
-                      await refresh();
-                    } catch (e: any) {
-                      setErrMsg(e?.message ?? 'Failed');
-                    }
-                  }}
-                >
-                  Verify
-                </button>
+                <Card>
+                  <Stack gap={3}>
+                    <Heading level={2}>Evidence</Heading>
+                    {!evidence ? (
+                      <Text color="muted">No evidence URLs available.</Text>
+                    ) : (
+                      <ul>
+                        {evidence.urls.map((u, idx) => (
+                          <li key={u}>
+                            <a href={u} target="_blank" rel="noreferrer">
+                              Open evidence #{idx + 1}
+                            </a>
+                            {evidence.paths[idx] ? (
+                              <Text as="div" size="sm" color="muted">
+                                {evidence.paths[idx]}
+                              </Text>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Stack>
+                </Card>
 
-                <button
-                  onClick={async () => {
-                    setErrMsg(null);
-                    try {
-                      await callAdminSetCreatorVerification({ creatorUid, status: 'rejected', notes: notes || null });
-                      await refresh();
-                    } catch (e: any) {
-                      setErrMsg(e?.message ?? 'Failed');
-                    }
-                  }}
-                >
-                  Reject
-                </button>
-              </div>
-            </>
-          ) : null}
+                <Card>
+                  <Stack gap={4}>
+                    <Heading level={2}>Decision</Heading>
 
-          {errMsg ? <p style={{ color: 'crimson' }}>{errMsg}</p> : null}
-        </main>
+                    <Field label="Admin notes" htmlFor="notes" helpText="Optional notes for audit trail.">
+                      <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
+                    </Field>
+
+                    <Stack gap={2}>
+                      <div>
+                        <Button
+                          onClick={async () => {
+                            setErrMsg(null);
+                            try {
+                              await callAdminSetCreatorVerification({ creatorUid, status: 'verified', notes: notes || null });
+                              await refresh();
+                              pushToast({ title: 'Creator verified', variant: 'success' });
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed');
+                            }
+                          }}
+                        >
+                          Verify
+                        </Button>
+                      </div>
+
+                      <div>
+                        <Button
+                          variant="danger"
+                          onClick={async () => {
+                            setErrMsg(null);
+                            try {
+                              await callAdminSetCreatorVerification({ creatorUid, status: 'rejected', notes: notes || null });
+                              await refresh();
+                              pushToast({ title: 'Creator rejected', variant: 'warning' });
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed');
+                            }
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </Stack>
+                  </Stack>
+                </Card>
+              </Stack>
+            ) : null}
+          </Stack>
+        </Section>
       </RequireRole>
     </RequireVerified>
   );

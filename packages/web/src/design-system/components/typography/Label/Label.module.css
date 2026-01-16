@@ -9,10 +9,10 @@
 }
 
 .text {
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
-.requiredMark {
+.required {
   color: var(--color-error);
 }
 

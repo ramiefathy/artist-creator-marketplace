@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useTheme, type ThemeType } from '@/design-system/providers';
+import { useTheme } from '@/design-system/providers';
+import { cn } from '@/design-system/utils';
 import styles from './ThemeSwitcher.module.css';
 
-const themes: { id: ThemeType; label: string; icon: string }[] = [
-  { id: 'noir', label: 'NOIR', icon: '🌑' },
-  { id: 'analog', label: 'ANALOG', icon: '🎸' },
-  { id: 'luma', label: 'LUMA', icon: '✦' },
-  { id: 'flux', label: 'FLUX', icon: '⚡' },
+type ThemeOption = { id: 'noir' | 'analog' | 'luma' | 'flux'; label: string };
+
+const themes: ThemeOption[] = [
+  { id: 'noir', label: 'NOIR' },
+  { id: 'analog', label: 'ANALOG' },
+  { id: 'luma', label: 'LUMA' },
+  { id: 'flux', label: 'FLUX' }
 ];
 
 export function ThemeSwitcher() {
@@ -16,82 +19,61 @@ export function ThemeSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setPreviewTheme(null);
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen, setPreviewTheme]);
-
-  // Close on Escape
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-        setPreviewTheme(null);
-      }
-    }
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, setPreviewTheme]);
-
-  const currentTheme = themes.find((t) => t.id === theme);
+  const currentTheme = themes.find((t) => t.id === theme)!;
   const activeTheme = previewTheme ?? theme;
 
-  if (!currentTheme) return null;
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!containerRef.current || containerRef.current.contains(event.target as Node)) return;
+      setIsOpen(false);
+      setPreviewTheme(null);
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setIsOpen(false);
+      setPreviewTheme(null);
+    }
+
+    if (!isOpen) return;
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, setPreviewTheme]);
 
   return (
     <div ref={containerRef} className={styles.container}>
       <button
-        type="button"
         className={styles.trigger}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label={`Current theme: ${currentTheme.label}. Click to change theme.`}
       >
-        <span className={styles.icon} aria-hidden="true">
-          {currentTheme.icon}
-        </span>
+        <span className={styles.triggerLabel}>{currentTheme.label}</span>
       </button>
 
       {isOpen ? (
         <div className={styles.popover} role="listbox" aria-label="Theme selection">
-          <div className={styles.header}>
-            <span className={styles.title}>Theme</span>
-            {previewTheme ? <span className={styles.previewLabel}>Previewing…</span> : null}
-          </div>
           <div className={styles.options}>
             {themes.map((t) => (
               <button
                 key={t.id}
-                type="button"
-                className={[styles.option, t.id === activeTheme ? styles.active : null].filter(Boolean).join(' ')}
+                className={cn(styles.option, t.id === activeTheme && styles.active)}
                 role="option"
                 aria-selected={t.id === theme}
                 onMouseEnter={() => setPreviewTheme(t.id)}
                 onMouseLeave={() => setPreviewTheme(null)}
-                onClick={() => {
-                  void setTheme(t.id);
+                onClick={async () => {
+                  await setTheme(t.id);
                   setIsOpen(false);
                 }}
               >
-                <span className={styles.optionIcon} aria-hidden="true">
-                  {t.icon}
-                </span>
                 <span className={styles.optionLabel}>{t.label}</span>
-                {t.id === theme ? (
-                  <span className={styles.checkmark} aria-hidden="true">
-                    ✓
-                  </span>
-                ) : null}
+                {t.id === theme ? <span className={styles.checkmark} aria-hidden="true">✓</span> : null}
               </button>
             ))}
           </div>

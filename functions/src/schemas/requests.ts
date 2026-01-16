@@ -420,3 +420,199 @@ export const adminChangeUserRoleSchema = {
     role: { type: 'string', enum: ['artist','creator','admin'] }
   }
 } as const;
+
+// Social / public platform
+export const setAccountPrivacySchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['isPrivateAccount'],
+  properties: {
+    isPrivateAccount: { type: 'boolean' }
+  }
+} as const;
+
+export const requestFollowSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['targetUid'],
+  properties: {
+    targetUid: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const approveFollowerSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['followerUid'],
+  properties: {
+    followerUid: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const removeFollowerSchema = approveFollowerSchema;
+
+export const unfollowSchema = requestFollowSchema;
+
+export const createPostSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['caption', 'tags', 'visibility'],
+  properties: {
+    caption: { type: 'string', minLength: 1, maxLength: 2000 },
+    tags: { type: 'array', maxItems: 25, items: { type: 'string', minLength: 1, maxLength: 32 } },
+    visibility: { type: 'string', enum: ['public', 'followers', 'private'] }
+  }
+} as const;
+
+export const updatePostSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    caption: { type: 'string', minLength: 1, maxLength: 2000 },
+    tags: { type: 'array', maxItems: 25, items: { type: 'string', minLength: 1, maxLength: 32 } },
+    visibility: { type: 'string', enum: ['public', 'followers', 'private'] }
+  }
+} as const;
+
+export const deletePostSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId'],
+  properties: {
+    postId: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const createCommentSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'body', 'parentCommentId'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    body: { type: 'string', minLength: 1, maxLength: 1000 },
+    parentCommentId: { anyOf: [{ type: 'string', minLength: 1 }, { type: 'null' }] }
+  }
+} as const;
+
+export const deleteCommentSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'commentId'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    commentId: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const toggleLikeSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'like'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    like: { type: 'boolean' }
+  }
+} as const;
+
+export const claimHandleSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['handle'],
+  properties: {
+    handle: { type: 'string', minLength: 3, maxLength: 24 }
+  }
+} as const;
+
+export const initiateMediaUploadSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'mimeType', 'sizeBytes', 'originalFilename'],
+  properties: {
+    kind: { type: 'string', enum: ['image', 'video', 'audio'] },
+    mimeType: { type: 'string', minLength: 3, maxLength: 100 },
+    sizeBytes: { type: 'integer', minimum: 1 },
+    originalFilename: { type: 'string', minLength: 1, maxLength: 200 }
+  }
+} as const;
+
+export const finalizeMediaUploadSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['uploadId'],
+  properties: {
+    uploadId: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const attachMediaToPostSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'assetId'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    assetId: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+// Moderation / reports
+export const reportPostSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'reasonCode', 'message'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    reasonCode: { type: 'string', enum: ['spam', 'harassment', 'hate', 'sexual', 'copyright', 'other'] },
+    message: { type: 'string', minLength: 1, maxLength: 2000 }
+  }
+} as const;
+
+export const reportCommentSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['postId', 'commentId', 'reasonCode', 'message'],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    commentId: { type: 'string', minLength: 1 },
+    reasonCode: { type: 'string', enum: ['spam', 'harassment', 'hate', 'sexual', 'copyright', 'other'] },
+    message: { type: 'string', minLength: 1, maxLength: 2000 }
+  }
+} as const;
+
+export const reportUserSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['targetUid', 'reasonCode', 'message'],
+  properties: {
+    targetUid: { type: 'string', minLength: 1 },
+    reasonCode: { type: 'string', enum: ['spam', 'harassment', 'hate', 'sexual', 'impersonation', 'other'] },
+    message: { type: 'string', minLength: 1, maxLength: 2000 }
+  }
+} as const;
+
+export const adminUpdateReportStatusSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['reportId', 'status'],
+  properties: {
+    reportId: { type: 'string', minLength: 1 },
+    status: { type: 'string', enum: ['open', 'resolved', 'dismissed'] },
+    adminNote: { anyOf: [{ type: 'string', minLength: 1, maxLength: 2000 }, { type: 'null' }] }
+  }
+} as const;
+
+export const blockUserSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['targetUid'],
+  properties: {
+    targetUid: { type: 'string', minLength: 1 }
+  }
+} as const;
+
+export const unblockUserSchema = blockUserSchema;
+
+export const muteUserSchema = blockUserSchema;
+
+export const unmuteUserSchema = blockUserSchema;

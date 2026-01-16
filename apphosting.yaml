@@ -36,3 +36,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: NEXT_PUBLIC_SOCIAL_ENABLED
+    value: "true"
+    availability:
+      - BUILD
+      - RUNTIME

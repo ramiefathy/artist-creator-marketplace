@@ -4,7 +4,10 @@ import { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET } from '../config';
 import { db } from '../init';
 import { nowIso } from '../utils/firestore';
 import { stripeClient, assertStripeWebhookSignature } from '../utils/stripe';
+import { activateContractFromPaidCheckoutSession } from '../utils/contracts';
 import { createNotification } from '../utils/notifications';
+
+const STRIPE_EVENT_LOCK_TTL_MS = 10 * 60 * 1000;
 
 export const stripeWebhook = onRequest(
   {
@@ -30,22 +33,56 @@ export const stripeWebhook = onRequest(
     const eventId = event.id;
     const now = nowIso();
 
-    // Idempotency guard
+    // Idempotency + retry safety:
+    // - Create/update stripeEvents with status=received before processing.
+    // - Mark status=processed/ignored on success.
+    // - Mark status=error and return non-2xx on failure so Stripe retries.
+    // - Use a short lock to avoid concurrent duplicate processing.
     const eventRef = db().collection('stripeEvents').doc(eventId);
-    const alreadyProcessed = await db().runTransaction(async (tx) => {
+
+    const init = await db().runTransaction(async (tx) => {
       const snap = await tx.get(eventRef);
-      if (snap.exists) return true;
-      tx.set(eventRef, {
-        eventId,
-        type: event.type,
-        processedAt: now,
-        createdAt: now
-      });
-      return false;
+      const existing = snap.exists ? (snap.data() as any) : null;
+      const status: string | null = existing?.status ?? null;
+
+      if (status === 'processed' || status === 'ignored') {
+        return { action: 'dedupe' as const, status };
+      }
+
+      const lockExpiresAt: string | null = existing?.lockExpiresAt ?? null;
+      if (lockExpiresAt && lockExpiresAt > now) {
+        return { action: 'locked' as const, status: status ?? 'received' };
+      }
+
+      const nextAttempt = Number(existing?.attemptCount ?? 0) + 1;
+      const nextLock = new Date(new Date(now).getTime() + STRIPE_EVENT_LOCK_TTL_MS).toISOString();
+
+      tx.set(
+        eventRef,
+        {
+          eventId,
+          type: event.type,
+          status: 'received',
+          attemptCount: nextAttempt,
+          lastAttemptAt: now,
+          lockExpiresAt: nextLock,
+          createdAt: existing?.createdAt ?? now
+        },
+        { merge: true }
+      );
+
+      return { action: 'process' as const };
     });
 
-    if (alreadyProcessed) {
-      res.status(200).json({ received: true, deduped: true });
+    if (init.action === 'dedupe') {
+      res.status(200).json({ received: true, deduped: true, status: init.status });
+      return;
+    }
+
+    if (init.action === 'locked') {
+      // Do not return 2xx while another handler is still processing this event.
+      // A 2xx here could cause Stripe to stop retrying even if the in-flight attempt fails.
+      res.status(409).json({ received: true, processing: true });
       return;
     }
 
@@ -55,71 +92,28 @@ export const stripeWebhook = onRequest(
 
         const contractId = session.metadata?.contractId;
         if (!contractId) {
+          await eventRef.set({ status: 'ignored', ignoredReason: 'missing_contractId', processedAt: now, lockExpiresAt: null }, { merge: true });
           res.status(200).json({ received: true, ignored: 'missing_contractId' });
           return;
         }
 
         if (session.payment_status !== 'paid') {
+          await eventRef.set({ status: 'ignored', ignoredReason: 'not_paid', processedAt: now, lockExpiresAt: null }, { merge: true });
           res.status(200).json({ received: true, ignored: 'not_paid' });
           return;
         }
 
-        const contractRef = db().collection('contracts').doc(contractId);
-        const contractSnap = await contractRef.get();
-        if (!contractSnap.exists) {
-          res.status(200).json({ received: true, ignored: 'contract_missing' });
-          return;
-        }
-
-        const contract = contractSnap.data() as any;
-        if (contract.stripe?.paymentStatus === 'paid') {
-          res.status(200).json({ received: true, ignored: 'already_paid' });
-          return;
-        }
-        if (contract.status === 'cancelled') {
-          res.status(200).json({ received: true, ignored: 'contract_cancelled' });
-          return;
-        }
-
-        const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
-
-        // Activate contract + set due date relative to activation
-        const dueDays = contract.snapshots?.campaign?.deliverableSpec?.dueDaysAfterActivation;
-        const dueAt = new Date(Date.now() + (Number(dueDays ?? 7) * 24 * 60 * 60 * 1000)).toISOString();
-
-        await contractRef.update({
-          status: 'active',
-          activatedAt: now,
-          stripe: {
-            ...contract.stripe,
-            checkoutSessionId: session.id,
-            paymentIntentId,
-            paymentStatus: 'paid'
+        const activation = await activateContractFromPaidCheckoutSession({ contractId, session, activatedAt: now });
+        const status = activation === 'ignored_refunded' ? 'ignored' : 'processed';
+        await eventRef.set(
+          {
+            status,
+            processedAt: now,
+            lockExpiresAt: null,
+            result: activation
           },
-          updatedAt: now
-        });
-
-        const deliverableRef = db().collection('deliverables').doc(contractId);
-        const deliverableSnap = await deliverableRef.get();
-        if (deliverableSnap.exists) {
-          await deliverableRef.update({ dueAt, updatedAt: now });
-        }
-
-        await createNotification({
-          toUid: contract.artistUid,
-          type: 'payment_received',
-          title: 'Payment received',
-          body: 'Payment was received. The creator can now proceed with the deliverable.',
-          link: `/artist/contracts/${contractId}`
-        });
-
-        await createNotification({
-          toUid: contract.creatorUid,
-          type: 'payment_received',
-          title: 'Contract activated',
-          body: 'Payment was received. You may proceed with posting the deliverable.',
-          link: `/creator/contracts/${contractId}`
-        });
+          { merge: true }
+        );
       }
 
       if (event.type === 'checkout.session.expired') {
@@ -153,23 +147,30 @@ export const stripeWebhook = onRequest(
                 tx.update(campaignRef, update);
               });
 
-              await createNotification({
-                toUid: contract.artistUid,
-                type: 'contract_cancelled',
-                title: 'Checkout session expired',
-                body: 'The payment session expired. The contract slot was released.',
-                link: `/artist/contracts/${contractId}`
-              });
-              await createNotification({
-                toUid: contract.creatorUid,
-                type: 'contract_cancelled',
-                title: 'Contract cancelled',
-                body: 'The artist did not complete payment in time. The contract was cancelled.',
-                link: `/creator/contracts/${contractId}`
-              });
+              // Best-effort notifications; expiry cleanup should not fail webhook delivery.
+              try {
+                await createNotification({
+                  toUid: contract.artistUid,
+                  type: 'contract_cancelled',
+                  title: 'Checkout session expired',
+                  body: 'The payment session expired. The contract slot was released.',
+                  link: `/artist/contracts/${contractId}`
+                });
+                await createNotification({
+                  toUid: contract.creatorUid,
+                  type: 'contract_cancelled',
+                  title: 'Contract cancelled',
+                  body: 'The artist did not complete payment in time. The contract was cancelled.',
+                  link: `/creator/contracts/${contractId}`
+                });
+              } catch (e) {
+                console.error('stripeWebhook: failed to create expiry notifications', { contractId }, e);
+              }
             }
           }
         }
+
+        await eventRef.set({ status: 'processed', processedAt: now, lockExpiresAt: null }, { merge: true });
       }
 
       if (event.type === 'charge.refunded') {
@@ -197,10 +198,27 @@ export const stripeWebhook = onRequest(
             });
           }
         }
+
+        await eventRef.set({ status: 'processed', processedAt: now, lockExpiresAt: null }, { merge: true });
+      }
+
+      // For event types we don't handle, record and return 200 so Stripe doesn't retry forever.
+      if (!['checkout.session.completed', 'checkout.session.expired', 'charge.refunded'].includes(event.type)) {
+        await eventRef.set({ status: 'ignored', ignoredReason: 'unhandled_event_type', processedAt: now, lockExpiresAt: null }, { merge: true });
       }
     } catch (e: any) {
-      // We already wrote the stripeEvents doc; return 200 to avoid Stripe retries storm.
-      res.status(200).json({ received: true, error: e?.message ?? 'unknown' });
+      const msg = e?.message ?? 'unknown';
+      await eventRef.set(
+        {
+          status: 'error',
+          errorMessage: msg,
+          errorAt: nowIso(),
+          lockExpiresAt: null
+        },
+        { merge: true }
+      );
+      // Non-2xx so Stripe retries.
+      res.status(500).json({ received: true, error: msg });
       return;
     }
 

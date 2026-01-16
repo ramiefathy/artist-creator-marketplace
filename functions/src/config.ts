@@ -9,5 +9,8 @@ export const ADMIN_EMAIL_ALLOWLIST = defineString('ADMIN_EMAIL_ALLOWLIST', { def
 
 export const SENDGRID_FROM_EMAIL = defineString('SENDGRID_FROM_EMAIL', { default: 'no-reply@example.com' }); // e.g. no-reply@YOUR_DOMAIN
 
+// Feature flags
+export const SOCIAL_ENABLED = defineString('SOCIAL_ENABLED', { default: 'false' });
+
 export const STRIPE_CONNECT_RETURN_PATH = '/creator/stripe' as const;
 export const STRIPE_CONNECT_REFRESH_PATH = '/creator/stripe' as const;

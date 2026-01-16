@@ -1,6 +1,7 @@
 'use client';
 
 import React, { forwardRef } from 'react';
+import { cn } from '@/design-system/utils';
 import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -18,16 +19,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={[
-          styles.button,
-          styles[variant],
-          styles[size],
-          fullWidth ? styles.fullWidth : null,
-          loading ? styles.loading : null,
-          className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        className={cn(styles.button, styles[variant], styles[size], fullWidth && styles.fullWidth, loading && styles.loading, className)}
         disabled={disabled || loading}
         {...props}
       >

@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
+import { onAuthStateChanged, getIdTokenResult, signInAnonymously } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { isSocialEnabled } from '@/lib/flags';
 
 type AuthState = {
   user: User | null;
@@ -22,8 +23,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (!u) {
-        setRole('unassigned');
-        setLoading(false);
+        if (!isSocialEnabled()) {
+          setRole('unassigned');
+          setLoading(false);
+          return;
+        }
+
+        // Silent "guest" identity so visitors can interact socially without signup.
+        // If Anonymous Auth is not enabled in Firebase console, this will fail and the user will remain signed out.
+        try {
+          await signInAnonymously(auth);
+        } catch (e) {
+          console.error('Anonymous sign-in failed', e);
+          setRole('unassigned');
+          setLoading(false);
+          return;
+        }
+        // onAuthStateChanged will fire again with the new user
         return;
       }
       try {

@@ -10,6 +10,94 @@ service cloud.firestore {
     function isCreator() { return role() == 'creator'; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
 
+    // Public SEO projections (read-only)
+    match /handles/{handle} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /publicProfiles/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    function isApprovedFollowerOf(authorUid) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/follows/$(authorUid)/followers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/follows/$(authorUid)/followers/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    function canReadPostData(post) {
+      // "Hidden" private content: non-approved viewers should not be able to read/see existence.
+      // Note: Firestore rules functions must be pure expressions (no imperative `if`).
+      return isAdmin() || (
+        post != null &&
+        post.keys().hasAll(['authorUid', 'visibility', 'authorIsPrivateAccount']) &&
+        post.get('deletedAt', null) == null &&
+        (
+          // Author always can read.
+          (signedIn() && request.auth.uid == post.authorUid) ||
+          (
+            // Account privacy acts as an upper bound: private accounts are follower-only for everyone else.
+            post.authorIsPrivateAccount == true
+              ? (post.visibility != 'private' && isApprovedFollowerOf(post.authorUid))
+              : (
+                // Post-level visibility (only applies if account is not private)
+                post.visibility == 'public' ||
+                (post.visibility == 'followers' && isApprovedFollowerOf(post.authorUid))
+              )
+          )
+        )
+      );
+    }
+
+    match /posts/{postId} {
+      allow read: if canReadPostData(resource.data);
+      allow write: if false; // functions only
+
+      match /comments/{commentId} {
+        allow read: if exists(/databases/$(database)/documents/posts/$(postId)) &&
+          canReadPostData(get(/databases/$(database)/documents/posts/$(postId)).data);
+        allow write: if false; // functions only
+      }
+
+      match /likes/{uid} {
+        allow read: if exists(/databases/$(database)/documents/posts/$(postId)) &&
+          canReadPostData(get(/databases/$(database)/documents/posts/$(postId)).data);
+        allow write: if false; // functions only
+      }
+    }
+
+    // Social media metadata (server-controlled; clients fetch via proxy endpoint, not by reading this collection directly).
+    match /mediaUploads/{uploadId} {
+      allow read, write: if false;
+    }
+
+    match /mediaAssets/{assetId} {
+      allow read, write: if false;
+    }
+
+    // Followers graph (read limited to parties/admin; no direct writes)
+    match /follows/{targetUid}/followers/{followerUid} {
+      allow read: if isAdmin() || (signedIn() && (request.auth.uid == targetUid || request.auth.uid == followerUid));
+      allow write: if false;
+    }
+
+    match /following/{followerUid}/targets/{targetUid} {
+      allow read: if isAdmin() || (signedIn() && (request.auth.uid == followerUid || request.auth.uid == targetUid));
+      allow write: if false;
+    }
+
+    match /blocks/{uid}/blocked/{targetUid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /mutes/{uid}/muted/{targetUid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
       allow create: if false; // created by auth trigger
@@ -20,7 +108,9 @@ service cloud.firestore {
     match /artistProfiles/{uid} {
       allow read: if signedIn();
       allow create: if false;
-      allow update: if isSelf(uid) && isArtist();
+      // Client profile edits must go through callable functions (server-side validation).
+      // This prevents self-mutation of sensitive fields like ratings, verification status, etc.
+      allow update: if false;
       allow delete: if false;
     }
 
@@ -31,7 +121,9 @@ service cloud.firestore {
     match /creatorProfiles/{uid} {
       allow read: if signedIn();
       allow create: if false;
-      allow update: if isSelf(uid) && isCreator();
+      // Client profile edits must go through callable functions (server-side validation).
+      // This prevents self-mutation of sensitive fields like ratings, verification status, etc.
+      allow update: if false;
       allow delete: if false;
     }
 
@@ -117,6 +209,11 @@ service cloud.firestore {
 
     match /auditLogs/{logId} {
       allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.reporterUid == request.auth.uid);
       allow write: if false;
     }
 

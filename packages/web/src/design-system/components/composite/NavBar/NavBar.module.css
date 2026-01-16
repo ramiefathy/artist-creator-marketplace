@@ -1,39 +1,42 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  z-index: 20;
   backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--color-bg) 80%, transparent);
   border-bottom: 1px solid var(--color-border);
 }
 
-.inner {
-  display: flex;
-  align-items: center;
+.nav {
+  padding: var(--spacing-4) 0;
   justify-content: space-between;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
 }
 
-.nav {
+.brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.links {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
   align-items: center;
 }
 
 .link {
-  color: var(--color-text);
   text-decoration: none;
-  font-size: 0.875rem;
 }
 
 .link:hover {
-  color: var(--color-link-hover);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-link) 40%, transparent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
-.user {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+.userEmail {
+  margin-left: var(--spacing-2);
 }
 

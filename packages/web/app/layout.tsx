@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { AuthProvider } from '@/components/AuthProvider';
-import { ThemeProvider, type ThemeType } from '@/design-system/providers';
+import { ThemeProvider, ToastProvider, type ThemeType } from '@/design-system/providers';
 import { NavBar } from '@/design-system/components/composite';
 import { ThemeSwitcher } from '@/design-system/components/theme';
 import './globals.css';
@@ -25,9 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <ThemeProvider initialTheme={theme}>
-            <NavBar />
-            <ThemeSwitcher />
-            <main>{children}</main>
+            <ToastProvider>
+              <NavBar />
+              <ThemeSwitcher />
+              <main>{children}</main>
+            </ToastProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

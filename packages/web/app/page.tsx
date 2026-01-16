@@ -6,10 +6,10 @@ import styles from './page.module.css';
 
 export default function HomePage() {
   return (
-    <main className={styles.main}>
+    <div className={styles.main}>
       <Container size="xl">
         <section className={styles.hero} data-flux-zone="hero">
-          <Heading level={1} size="4xl" className={styles.title}>
+          <Heading level={1} size="_4xl" className={styles.title}>
             Where Artists &amp; Creators Make Music Viral
           </Heading>
           <Text size="lg" color="muted" className={styles.subtitle}>
@@ -33,6 +33,6 @@ export default function HomePage() {
           </ButtonLink>
         </section>
       </Container>
-    </main>
+    </div>
   );
 }
