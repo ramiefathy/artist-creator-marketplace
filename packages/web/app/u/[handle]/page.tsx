@@ -69,15 +69,19 @@ export default async function PublicProfilePage({ params }: { params: { handle: 
   const posts: PostCardDoc[] = [];
   if (!profile.isPrivateAccount) {
     // SEO-safe: only render publicly readable posts.
-    const snaps = await getDocs(
-      query(
-        collection(publicDb, 'publicPosts'),
-        where('authorUid', '==', uid),
-        orderBy('createdAt', 'desc'),
-        limit(50)
-      )
-    );
-    posts.push(...(snaps.docs.map((d) => d.data() as any) as PostCardDoc[]));
+    try {
+      const snaps = await getDocs(
+        query(
+          collection(publicDb, 'publicPosts'),
+          where('authorUid', '==', uid),
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        )
+      );
+      posts.push(...(snaps.docs.map((d) => d.data() as any) as PostCardDoc[]));
+    } catch (e) {
+      console.error('PublicProfilePage: failed to load publicPosts', e);
+    }
   }
 
   return (

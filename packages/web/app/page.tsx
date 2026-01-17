@@ -97,22 +97,20 @@ export default function HomePage() {
 }
 
 async function SocialHubHome() {
-  const [postSnap, campaignSnap, peopleSnap] = await Promise.all([
-    getDocs(
-      query(
-        // SEO-safe, public-read feed.
-        collection(publicDb, 'publicPosts'),
-        orderBy('createdAt', 'desc'),
-        limit(8)
-      )
-    ),
+  const [postRes, campaignRes, peopleRes] = await Promise.allSettled([
+    getDocs(query(collection(publicDb, 'publicPosts'), orderBy('createdAt', 'desc'), limit(8))),
     getDocs(query(collection(publicDb, 'publicCampaigns'), where('status', '==', 'live'), orderBy('createdAt', 'desc'), limit(6))),
     getDocs(query(collection(publicDb, 'publicProfiles'), orderBy('followerCount', 'desc'), limit(6)))
   ]);
 
-  const posts = postSnap.docs.map((d) => d.data() as any as HubPost);
-  const campaigns = campaignSnap.docs.map((d) => d.data() as any as HubCampaign);
-  const people = peopleSnap.docs.map((d) => d.data() as any as HubPerson).filter((p) => p.handle);
+  if (postRes.status === 'rejected') console.error('SocialHubHome: failed to load publicPosts', postRes.reason);
+  if (campaignRes.status === 'rejected') console.error('SocialHubHome: failed to load publicCampaigns', campaignRes.reason);
+  if (peopleRes.status === 'rejected') console.error('SocialHubHome: failed to load publicProfiles', peopleRes.reason);
+
+  const posts = postRes.status === 'fulfilled' ? postRes.value.docs.map((d) => d.data() as any as HubPost) : [];
+  const campaigns = campaignRes.status === 'fulfilled' ? campaignRes.value.docs.map((d) => d.data() as any as HubCampaign) : [];
+  const people =
+    peopleRes.status === 'fulfilled' ? peopleRes.value.docs.map((d) => d.data() as any as HubPerson).filter((p) => p.handle) : [];
 
   return (
     <div className={styles.main}>
