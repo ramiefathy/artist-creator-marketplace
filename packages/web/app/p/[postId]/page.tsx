@@ -4,9 +4,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { publicDb } from '@/lib/server/firebasePublic';
 import { isSocialEnabled } from '@/lib/flags';
 import { getMediaProxyUrl } from '@/lib/functionsUrl';
-import { Container, Section, Stack } from '@/design-system/components/layout';
+import { Container, Inline, Section, Stack } from '@/design-system/components/layout';
 import { Heading, Text } from '@/design-system/components/typography';
+import { Avatar, Badge, Card } from '@/design-system/components/primitives';
 import { PostViewerClient } from '@/components/social/PostViewerClient';
+import styles from './PostPage.module.css';
 
 type PostVisibility = 'public' | 'followers' | 'private';
 
@@ -33,6 +35,12 @@ function fmtIso(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function visibilityVariant(v: PostVisibility): 'neutral' | 'info' | 'warning' {
+  if (v === 'followers') return 'info';
+  if (v === 'private') return 'warning';
+  return 'neutral';
 }
 
 export default async function PublicPostPage({ params }: { params: { postId: string } }) {
@@ -91,24 +99,59 @@ export default async function PublicPostPage({ params }: { params: { postId: str
           </Stack>
 
           {post ? (
-            <Stack gap={3}>
-              <Text>{post.caption}</Text>
-              {Array.isArray(post.tags) && post.tags.length > 0 ? (
-                <Text color="muted" size="sm">
-                  {post.tags.map((t) => `#${t}`).join(' ')}
-                </Text>
-              ) : null}
-              {Array.isArray(post.media) && post.media.length > 0 ? (
-                <Stack gap={3}>
-                  {post.media.map((m) => {
-                    const src = getMediaProxyUrl(m.assetId);
-                    if (m.kind === 'image') return <img key={m.assetId} src={src} alt="" style={{ borderRadius: 12 }} />;
-                    if (m.kind === 'video') return <video key={m.assetId} src={src} controls style={{ width: '100%', borderRadius: 12 }} />;
-                    return <audio key={m.assetId} src={src} controls style={{ width: '100%' }} />;
-                  })}
-                </Stack>
-              ) : null}
-            </Stack>
+            <Card className={styles.heroCard} data-hover="lift">
+              <Stack gap={4} className={styles.heroInner}>
+                <div className={styles.identityRow}>
+                  <div className={styles.identityLeft}>
+                    <Avatar name={post.authorHandle} size="md" />
+                    <Stack gap={1}>
+                      <Text className={styles.handle}>
+                        <Link href={`/u/${post.authorHandle}`}>@{post.authorHandle}</Link>
+                      </Text>
+                      <Text size="sm" className={styles.meta}>
+                        {fmtIso(post.createdAt)}
+                      </Text>
+                    </Stack>
+                  </div>
+
+                  <Inline gap={2} wrap align="center">
+                    <Badge variant="neutral" size="sm">
+                      {post.authorRoleLabel}
+                    </Badge>
+                    <Badge variant={visibilityVariant(post.visibility)} size="sm">
+                      {post.visibility}
+                    </Badge>
+                  </Inline>
+                </div>
+
+                <Text whitespace="preWrap">{post.caption}</Text>
+
+                {Array.isArray(post.tags) && post.tags.length > 0 ? (
+                  <div className={styles.chips} aria-label="Tags">
+                    {post.tags.map((t) => (
+                      <Badge key={t} variant="neutral" size="sm" className={styles.chip}>
+                        #{t}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+
+                {Array.isArray(post.media) && post.media.length > 0 ? (
+                  <div className={styles.media}>
+                    <div className={styles.mediaInner}>
+                      <Stack gap={3}>
+                        {post.media.map((m) => {
+                          const src = getMediaProxyUrl(m.assetId);
+                          if (m.kind === 'image') return <img key={m.assetId} src={src} alt="" style={{ borderRadius: 12 }} />;
+                          if (m.kind === 'video') return <video key={m.assetId} src={src} controls style={{ width: '100%', borderRadius: 12 }} />;
+                          return <audio key={m.assetId} src={src} controls style={{ width: '100%' }} />;
+                        })}
+                      </Stack>
+                    </div>
+                  </div>
+                ) : null}
+              </Stack>
+            </Card>
           ) : null}
 
           <PostViewerClient postId={postId} initialPost={post} />
@@ -117,4 +160,3 @@ export default async function PublicPostPage({ params }: { params: { postId: str
     </Container>
   );
 }
-

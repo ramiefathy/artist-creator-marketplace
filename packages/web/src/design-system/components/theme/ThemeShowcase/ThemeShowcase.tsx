@@ -19,10 +19,8 @@ export function ThemeShowcase() {
 
   const cards = useMemo<ThemeCard[]>(
     () => [
-      { id: 'noir', label: 'NOIR', description: 'Dark & electric', swatches: ['#0a0a0f', '#00f0ff', '#ff00ff'] },
-      { id: 'analog', label: 'ANALOG', description: 'Warm & nostalgic', swatches: ['#faf6f1', '#d4582a', '#1a5f4a'] },
-      { id: 'luma', label: 'LUMA', description: 'Clean & premium', swatches: ['#ffffff', '#0f1729', '#6366f1'] },
-      { id: 'flux', label: 'FLUX', description: 'Bold & expressive', swatches: ['#f5f0e8', '#ff3d00', '#1400ff'] }
+      { id: 'studio', label: 'Studio Desk', description: 'Modern, refined, studio-polish UI', swatches: ['#f6f7fa', '#101b2d', '#2b59ff'] },
+      { id: 'liner', label: 'Liner Notes', description: 'Warm paper, editorial typesetting, label vibe', swatches: ['#fbf6ee', '#2a2118', '#b24a2c'] }
     ],
     []
   );
@@ -92,4 +90,3 @@ export function ThemeShowcase() {
     </div>
   );
 }
-

@@ -1,0 +1,88 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--social-composer-accent) 22%, var(--ui-card-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-card-bg) 80%, transparent),
+    color-mix(in srgb, var(--ui-card-bg) 92%, var(--color-surface))
+  );
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(720px 260px at 12% -20%, color-mix(in srgb, var(--social-composer-accent) 24%, transparent), transparent 60%),
+    radial-gradient(860px 300px at 110% 20%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 58%);
+  opacity: 0.7;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.handleLine {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  color: var(--social-meta-text);
+  letter-spacing: 0.01em;
+}
+
+.stats {
+  display: flex;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-2);
+}
+
+.stat {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 8.5rem;
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--social-meta-text);
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.bio {
+  margin-top: var(--spacing-3);
+  max-width: 70ch;
+}
+

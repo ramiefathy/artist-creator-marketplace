@@ -1,0 +1,56 @@
+.postCard {
+  border-color: color-mix(in srgb, var(--social-composer-accent) 18%, var(--ui-card-border));
+}
+
+.meta {
+  font-family: var(--font-mono);
+  color: var(--social-meta-text);
+  letter-spacing: 0.01em;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.chip {
+  background: var(--social-chip-bg);
+  border-color: var(--social-chip-border);
+  color: var(--social-chip-text);
+}
+
+.actionCard {
+  border-color: var(--social-divider);
+  background: color-mix(in srgb, var(--ui-card-bg) 88%, transparent);
+}
+
+.commentList {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.commentRow {
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--social-divider);
+}
+
+.commentHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.commentMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.commentBody {
+  margin-top: var(--spacing-2);
+}
+

@@ -1,0 +1,77 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--social-composer-accent) 24%, var(--social-composer-border));
+  background: var(--social-composer-bg);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--social-composer-rule);
+  opacity: var(--social-composer-rule-opacity);
+  mix-blend-mode: multiply;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 260px at 10% -20%, color-mix(in srgb, var(--social-composer-accent) 26%, transparent), transparent 60%),
+    radial-gradient(760px 240px at 110% 0%, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 55%);
+  opacity: 0.75;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+}
+
+.headerRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--social-meta-text);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.divider {
+  height: 1px;
+  background: var(--social-divider);
+  margin: var(--spacing-2) 0;
+}
+
+.fileMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+.fileName {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  border: 1px dashed var(--social-divider);
+  border-radius: var(--radius-sm);
+  padding: 0.125rem 0.5rem;
+  background: color-mix(in srgb, var(--ui-input-bg) 70%, transparent);
+}
+

@@ -1,13 +1,13 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { publicDb } from '@/lib/server/firebasePublic';
 import { isSocialEnabled } from '@/lib/flags';
-import { getMediaProxyUrl } from '@/lib/functionsUrl';
 import { Container, Section, Stack } from '@/design-system/components/layout';
 import { Heading, Text } from '@/design-system/components/typography';
 import { ProfileActions } from '@/components/social/ProfileActions';
+import { ProfileHeader } from '@/components/social/ProfileHeader';
+import { PostCard, type PostDoc as PostCardDoc } from '@/components/social/PostCard';
 
 type PublicProfile = {
   uid: string;
@@ -22,35 +22,8 @@ type PublicProfile = {
   updatedAt: string;
 };
 
-type PostVisibility = 'public' | 'followers' | 'private';
-
-type PostDoc = {
-  postId: string;
-  authorUid: string;
-  authorHandle: string;
-  authorRoleLabel: string;
-  caption: string;
-  tags: string[];
-  visibility: PostVisibility;
-  authorIsPrivateAccount: boolean;
-  media?: Array<{ assetId: string; kind: 'image' | 'video' | 'audio'; mimeType?: string }>;
-  likeCount?: number;
-  commentCount?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-};
-
 function normalizeHandle(raw: string): string {
   return raw.trim().toLowerCase().replace(/^@+/, '');
-}
-
-function fmtIso(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
 }
 
 export default async function PublicProfilePage({ params }: { params: { handle: string } }) {
@@ -93,7 +66,7 @@ export default async function PublicProfilePage({ params }: { params: { handle: 
     updatedAt: String(p.updatedAt ?? '')
   };
 
-  const posts: PostDoc[] = [];
+  const posts: PostCardDoc[] = [];
   if (!profile.isPrivateAccount) {
     // SEO-safe: only render publicly readable posts.
     const snaps = await getDocs(
@@ -107,64 +80,29 @@ export default async function PublicProfilePage({ params }: { params: { handle: 
         limit(50)
       )
     );
-    posts.push(...(snaps.docs.map((d) => d.data() as any) as PostDoc[]));
+    posts.push(...(snaps.docs.map((d) => d.data() as any) as PostCardDoc[]));
   }
 
   return (
     <Container size="lg">
       <Section as="section" size="lg">
         <Stack gap={6}>
-          <Stack gap={2}>
-            <Heading level={1}>{profile.displayName}</Heading>
-            <Text color="muted">
-              @{profile.handle} · {profile.roleLabel} · {profile.followerCount} followers
-            </Text>
-            <Text color="muted">Updated {profile.updatedAt ? fmtIso(profile.updatedAt) : '—'}</Text>
-          </Stack>
-
-          {profile.bio ? <Text>{profile.bio}</Text> : <Text color="muted">No bio yet.</Text>}
-
-          {profile.isPrivateAccount ? (
-            <Text color="muted">This account is private. Public posts are hidden.</Text>
-          ) : null}
+          <ProfileHeader profile={profile} />
 
           <ProfileActions profileUid={profile.uid} profileHandle={profile.handle} isPrivateAccount={profile.isPrivateAccount} />
 
           <Stack gap={3} as="section">
-            <Heading level={2}>Posts</Heading>
+            <Heading level={2} size="_2xl">
+              Posts
+            </Heading>
             {profile.isPrivateAccount ? (
               <Text color="muted">This account is private.</Text>
             ) : posts.length === 0 ? (
               <Text color="muted">No public posts yet.</Text>
             ) : (
-              <Stack gap={4}>
+              <Stack gap={3}>
                 {posts.map((post) => (
-                  <article key={post.postId}>
-                    <Stack gap={2}>
-                      <Text color="muted" size="sm">
-                        <Link href={`/p/${post.postId}`}>Open post</Link> · {fmtIso(post.createdAt)} · {post.likeCount ?? 0} likes ·{' '}
-                        {post.commentCount ?? 0} comments
-                      </Text>
-                      <Text>{post.caption}</Text>
-
-                      {Array.isArray(post.tags) && post.tags.length > 0 ? (
-                        <Text color="muted" size="sm">
-                          {post.tags.map((t) => `#${t}`).join(' ')}
-                        </Text>
-                      ) : null}
-
-                      {Array.isArray(post.media) && post.media.length > 0 ? (
-                        <Stack gap={3}>
-                          {post.media.map((m) => {
-                            const src = getMediaProxyUrl(m.assetId);
-                            if (m.kind === 'image') return <img key={m.assetId} src={src} alt="" style={{ borderRadius: 12 }} />;
-                            if (m.kind === 'video') return <video key={m.assetId} src={src} controls style={{ width: '100%', borderRadius: 12 }} />;
-                            return <audio key={m.assetId} src={src} controls style={{ width: '100%' }} />;
-                          })}
-                        </Stack>
-                      ) : null}
-                    </Stack>
-                  </article>
+                  <PostCard key={post.postId} post={post} preferDirectMedia />
                 ))}
               </Stack>
             )}
@@ -174,4 +112,3 @@ export default async function PublicProfilePage({ params }: { params: { handle: 
     </Container>
   );
 }
-

@@ -1,0 +1,73 @@
+.heroCard {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--social-composer-accent) 18%, var(--ui-card-border));
+}
+
+.heroCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(800px 260px at 18% -20%, color-mix(in srgb, var(--social-composer-accent) 22%, transparent), transparent 60%),
+    radial-gradient(720px 240px at 110% 10%, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 55%);
+  opacity: 0.7;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+}
+
+.identityRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.identityLeft {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.handle {
+  font-family: var(--font-display);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.meta {
+  font-family: var(--font-mono);
+  color: var(--social-meta-text);
+  letter-spacing: 0.01em;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.chip {
+  background: var(--social-chip-bg);
+  border-color: var(--social-chip-border);
+  color: var(--social-chip-text);
+}
+
+.media {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--social-divider);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ui-input-bg) 65%, transparent);
+}
+
+.mediaInner {
+  padding: var(--spacing-3);
+}
+

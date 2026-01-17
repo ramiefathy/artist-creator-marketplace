@@ -4,8 +4,8 @@
   font-family: var(--font-body);
   font-size: 1rem;
   color: var(--color-text);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-color: var(--ui-input-bg, var(--color-surface));
+  border: 1px solid var(--ui-input-border, var(--color-border));
   border-radius: var(--radius-md);
   transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
   resize: vertical;
@@ -16,7 +16,7 @@
 }
 
 .textarea:hover:not(:disabled) {
-  border-color: var(--color-border-strong);
+  border-color: var(--ui-input-border-hover, var(--color-border-strong));
 }
 
 .textarea:focus {
@@ -39,4 +39,3 @@
   border-color: var(--color-error);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 20%, transparent);
 }
-

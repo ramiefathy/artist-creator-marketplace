@@ -5,13 +5,11 @@ import { useTheme } from '@/design-system/providers';
 import { cn } from '@/design-system/utils';
 import styles from './ThemeSwitcher.module.css';
 
-type ThemeOption = { id: 'noir' | 'analog' | 'luma' | 'flux'; label: string };
+type ThemeOption = { id: 'studio' | 'liner'; label: string; description: string };
 
 const themes: ThemeOption[] = [
-  { id: 'noir', label: 'NOIR' },
-  { id: 'analog', label: 'ANALOG' },
-  { id: 'luma', label: 'LUMA' },
-  { id: 'flux', label: 'FLUX' }
+  { id: 'studio', label: 'Studio Desk', description: 'Modern, refined studio UI' },
+  { id: 'liner', label: 'Liner Notes', description: 'Warm, editorial paper feel' }
 ];
 
 export function ThemeSwitcher() {
@@ -51,13 +49,14 @@ export function ThemeSwitcher() {
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label={`Current theme: ${currentTheme.label}. Click to change theme.`}
+        aria-label={`Current mode: ${currentTheme.label}. Click to change mode.`}
       >
+        <span className={styles.triggerMeta}>Mode</span>
         <span className={styles.triggerLabel}>{currentTheme.label}</span>
       </button>
 
       {isOpen ? (
-        <div className={styles.popover} role="listbox" aria-label="Theme selection">
+        <div className={styles.popover} role="listbox" aria-label="Mode selection">
           <div className={styles.options}>
             {themes.map((t) => (
               <button
@@ -72,7 +71,10 @@ export function ThemeSwitcher() {
                   setIsOpen(false);
                 }}
               >
-                <span className={styles.optionLabel}>{t.label}</span>
+                <span className={styles.optionText}>
+                  <span className={styles.optionLabel}>{t.label}</span>
+                  <span className={styles.optionDesc}>{t.description}</span>
+                </span>
                 {t.id === theme ? <span className={styles.checkmark} aria-hidden="true">✓</span> : null}
               </button>
             ))}
@@ -82,4 +84,3 @@ export function ThemeSwitcher() {
     </div>
   );
 }
-

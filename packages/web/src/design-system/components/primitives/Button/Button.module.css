@@ -3,8 +3,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-family: var(--font-body);
+  font-family: var(--ui-button-font, var(--font-body));
   font-weight: 600;
+  letter-spacing: var(--ui-button-letter-spacing, 0.01em);
+  text-transform: var(--ui-button-text-transform, none);
   border: none;
   cursor: pointer;
   transition: transform var(--duration-fast) var(--ease-out),
@@ -113,4 +115,3 @@
     transform: rotate(360deg);
   }
 }
-

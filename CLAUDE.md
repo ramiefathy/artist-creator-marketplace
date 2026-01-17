@@ -17,11 +17,20 @@ npm run emulators
 # Start Next.js dev server (separate terminal)
 npm run dev:web
 
-# Run Functions test suite
+# Run Functions unit tests
 npm test
 
 # Run a single test file
 npm --workspace functions run test -- path/to/file.test.ts
+
+# Run Firestore/Storage rules tests (requires emulators)
+npm run test:rules
+
+# Run integration tests (requires emulators, builds functions first)
+npm run test:integration
+
+# Run web app tests (Jest + React Testing Library)
+npm --workspace packages/web run test
 
 # Lint
 npm --workspace functions run lint      # ESLint for Cloud Functions
@@ -65,7 +74,7 @@ This is a two-sided marketplace (MCMP) where Artists create promotional campaign
 
 2. **Signed URLs**: Storage rules deny direct reads. Functions issue time-bound signed URLs for protected assets (track previews, evidence, contract PDFs).
 
-3. **Request validation**: Callable functions validate payloads using AJV schemas from `packages/shared/src/schemas/requests/`.
+3. **Request validation**: Callable functions validate payloads using AJV schemas from `functions/src/schemas/requests.ts`.
 
 4. **Escrow flow**: Artist pays via Stripe Checkout → webhook confirms payment → contract activates → creator delivers → artist approves → platform transfers to creator via Stripe Connect.
 
@@ -77,6 +86,7 @@ Core entities: `users`, `tracks`, `campaigns`, `offers`, `contracts`, `deliverab
 Messaging: `threads/{threadId}/messages/{messageId}`
 Admin: `disputes`, `auditLogs`, `notifications`, `reviews`
 Stripe: `stripeEvents`, `payoutTransfers`
+Social (feature-flagged): `handles/{handle}`, `publicProfiles/{uid}`, `posts/{postId}`, `follows/{targetUid}/followers/{followerUid}`, `following/{uid}/targets/{targetUid}`, `blocks/{uid}/blocked/{targetUid}`, `mutes/{uid}/muted/{targetUid}`, `reports/{reportId}`, `mediaUploads/{uploadId}`, `mediaAssets/{assetId}`
 
 ### Web App Routes (`packages/web/app/`)
 
@@ -85,6 +95,19 @@ Stripe: `stripeEvents`, `payoutTransfers`
 - `/admin/*` - Admin verification queue, disputes
 - `/messages/*` - Messaging threads
 - `/onboarding` - Role selection after signup
+- `/explore` - Social feed (feature-flagged)
+- `/u/[handle]` - Public user profiles (feature-flagged)
+- `/p/[postId]` - Individual post view (feature-flagged)
+
+### Design System (`packages/web/src/design-system/`)
+
+Reusable component library with theming support:
+- `components/primitives/` - Button, Input, Select, Card, Badge, Avatar
+- `components/layout/` - Stack, Inline, Grid, Container, Section
+- `components/composite/` - NavBar, Modal, DataTable, Toast
+- `components/theme/` - ThemeSwitcher, ThemeShowcase
+- `providers/` - ThemeProvider, ToastProvider
+- `hooks/useTheme` - Access current theme
 
 ## Coding Conventions
 
@@ -106,6 +129,10 @@ Stripe: `stripeEvents`, `payoutTransfers`
 - `ADMIN_EMAIL_ALLOWLIST` - Comma-separated emails for auto-admin bootstrap
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` - Stripe credentials
 - `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL` - Optional email sending
+- `SOCIAL_ENABLED` - Enable social features (posts, profiles, flags)
+
+**Feature Flags**:
+- `NEXT_PUBLIC_SOCIAL_ENABLED` (web) / `SOCIAL_ENABLED` (functions) - Enables social feed, user profiles, and posts
 
 ## Emulator Ports
 

@@ -7,21 +7,25 @@ import { Text } from '@/design-system';
 
 export type MediaKind = 'image' | 'video' | 'audio';
 
-export function MediaAsset({ assetId, kind }: { assetId: string; kind: MediaKind }) {
+export function MediaAsset({ assetId, kind, preferDirectUrl }: { assetId: string; kind: MediaKind; preferDirectUrl?: boolean }) {
   const { user } = useAuth();
-  const [src, setSrc] = useState<string | null>(null);
-  const [errMsg, setErrMsg] = useState<string | null>(null);
-
   const url = useMemo(() => getMediaProxyUrl(assetId), [assetId]);
+  const [src, setSrc] = useState<string | null>(() => (preferDirectUrl ? url : null));
+  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     let objectUrl: string | null = null;
 
-    setSrc(null);
+    setSrc(preferDirectUrl ? url : null);
     setErrMsg(null);
 
     (async () => {
+      if (preferDirectUrl) {
+        if (!cancelled) setSrc(url);
+        return;
+      }
+
       if (!user) {
         // Public posts can be accessed without a token.
         if (!cancelled) setSrc(url);
@@ -42,7 +46,7 @@ export function MediaAsset({ assetId, kind }: { assetId: string; kind: MediaKind
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url, user]);
+  }, [preferDirectUrl, url, user]);
 
   if (errMsg) return <Text color="muted">Media unavailable</Text>;
   if (!src) return <Text color="muted">Loading media…</Text>;
@@ -55,4 +59,3 @@ export function MediaAsset({ assetId, kind }: { assetId: string; kind: MediaKind
   }
   return <audio src={src} controls style={{ width: '100%' }} />;
 }
-

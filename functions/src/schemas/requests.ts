@@ -15,7 +15,7 @@ export const setThemePreferenceSchema = {
   additionalProperties: false,
   required: ['theme'],
   properties: {
-    theme: { type: 'string', enum: ['noir', 'analog', 'luma', 'flux'] }
+    theme: { type: 'string', enum: ['studio', 'liner'] }
   }
 } as const;
 

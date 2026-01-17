@@ -19,8 +19,11 @@ export default function HomePage() {
 
         <section className={styles.themeSection} data-flux-zone="marketing">
           <Heading level={2} size="xl" className={styles.sectionTitle}>
-            Choose your visual experience
+            Choose your mode
           </Heading>
+          <Text color="muted">
+            Pick a look that matches how you work: modern “Studio Desk” polish or warm “Liner Notes” editorial.
+          </Text>
           <ThemeShowcase />
         </section>
 

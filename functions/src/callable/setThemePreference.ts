@@ -6,7 +6,7 @@ import { nowIso } from '../utils/firestore';
 import { validateOrThrow } from '../utils/validation';
 import { setThemePreferenceSchema } from '../schemas/requests';
 
-type ThemeType = 'noir' | 'analog' | 'luma' | 'flux';
+type ThemeType = 'studio' | 'liner';
 type Req = { theme: ThemeType };
 type Res = { ok: true; theme: ThemeType };
 

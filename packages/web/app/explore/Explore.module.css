@@ -1,0 +1,36 @@
+.layout {
+  display: grid;
+  gap: var(--spacing-6);
+}
+
+.left {
+  min-width: 0;
+}
+
+.right {
+  min-width: 0;
+}
+
+@media (min-width: 980px) {
+  .layout {
+    grid-template-columns: 420px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .left {
+    position: sticky;
+    top: 5.75rem;
+  }
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.subhead {
+  max-width: 60ch;
+}
+

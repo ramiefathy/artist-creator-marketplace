@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAuth } from '@/components/AuthProvider';
 import { callSetThemePreference } from '@/lib/callables';
 
-export type ThemeType = 'noir' | 'analog' | 'luma' | 'flux';
+export type ThemeType = 'studio' | 'liner';
 
 type ThemeContextValue = {
   theme: ThemeType;
@@ -17,9 +17,22 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const THEME_COOKIE = 'mcmp-theme-v1';
-const DEFAULT_THEME: ThemeType = 'luma';
-const VALID_THEMES: ThemeType[] = ['noir', 'analog', 'luma', 'flux'];
+export type ModeType = ThemeType;
+
+const THEME_COOKIE = 'mcmp-theme-v2';
+const DEFAULT_THEME: ThemeType = 'studio';
+const VALID_THEMES: ThemeType[] = ['studio', 'liner'];
+
+function normalizeTheme(raw: unknown): ThemeType {
+  if (raw === 'studio' || raw === 'liner') return raw;
+  if (raw === 'analog') return 'liner';
+  return 'studio';
+}
+
+function parsePersistedTheme(raw: unknown): ThemeType | null {
+  if (raw === 'studio' || raw === 'liner' || raw === 'analog') return normalizeTheme(raw);
+  return null;
+}
 
 function setCookie(name: string, value: string, days: number) {
   const expires = new Date(Date.now() + days * 864e5).toUTCString();
@@ -33,7 +46,7 @@ export type ThemeProviderProps = {
 
 export function ThemeProvider({ children, initialTheme = DEFAULT_THEME }: ThemeProviderProps) {
   const { user } = useAuth();
-  const [theme, setThemeState] = useState<ThemeType>(initialTheme);
+  const [theme, setThemeState] = useState<ThemeType>(normalizeTheme(initialTheme));
   const [previewTheme, setPreviewTheme] = useState<ThemeType | null>(null);
 
   const activeTheme = previewTheme ?? theme;
@@ -49,12 +62,14 @@ export function ThemeProvider({ children, initialTheme = DEFAULT_THEME }: ThemeP
     let cancelled = false;
     (async () => {
       const snap = await getDoc(doc(db, 'users', user.uid));
-      const fromDb = snap.exists() ? (snap.data() as any).theme : undefined;
-      if (!VALID_THEMES.includes(fromDb as ThemeType)) return;
+      const fromDbRaw = snap.exists() ? (snap.data() as any).theme : undefined;
+      const fromDb = parsePersistedTheme(fromDbRaw);
+
+      if (!fromDb) return;
 
       if (!cancelled && fromDb !== theme) {
-        setThemeState(fromDb as ThemeType);
-        setCookie(THEME_COOKIE, fromDb as string, 365);
+        setThemeState(fromDb);
+        setCookie(THEME_COOKIE, fromDb, 365);
       }
     })().catch((error) => {
       console.error('Failed to load theme preference:', error);
@@ -104,4 +119,3 @@ export function useTheme() {
   }
   return context;
 }
-

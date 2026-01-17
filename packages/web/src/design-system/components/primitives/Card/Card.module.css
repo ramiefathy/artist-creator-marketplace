@@ -1,8 +1,20 @@
 .card {
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border: 1px solid var(--ui-card-border, var(--color-border));
+  background: var(--ui-card-bg, var(--color-surface));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: var(--spacing-4);
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
+.card[data-hover="lift"] {
+  will-change: transform;
+}
+
+.card[data-hover="lift"]:hover {
+  transform: var(--card-hover-transform, none);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+}

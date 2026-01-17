@@ -14,8 +14,9 @@ import {
   callToggleLike,
   callUpdatePost
 } from '@/lib/callables';
-import { Button, Field, Heading, Inline, Input, Stack, Text } from '@/design-system';
+import { Badge, Button, Card, Field, Heading, Inline, Select, Stack, Text, Textarea } from '@/design-system';
 import { MediaAsset, type MediaKind } from './MediaAsset';
+import styles from './PostViewerClient.module.css';
 
 type PostVisibility = 'public' | 'followers' | 'private';
 
@@ -64,8 +65,14 @@ function parseTags(raw: string): string[] {
   return tags.slice(0, 25).map((t) => (t.length > 32 ? t.slice(0, 32) : t));
 }
 
+function visibilityVariant(v: PostVisibility): 'neutral' | 'info' | 'warning' {
+  if (v === 'followers') return 'info';
+  if (v === 'private') return 'warning';
+  return 'neutral';
+}
+
 export function PostViewerClient({ postId, initialPost }: { postId: string; initialPost: PostDoc | null }) {
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role } = useAuth();
   const viewerUid = user?.uid ?? null;
   const isAdmin = role === 'admin';
 
@@ -164,11 +171,6 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post?.postId, viewerUid]);
 
-  if (!viewerUid && !authLoading) {
-    // Even for public posts, auth is required for write actions, and helps for follower-only reads.
-    // If anonymous auth is enabled, the app will automatically sign the user in.
-  }
-
   if (loading) return <Text color="muted">Loading…</Text>;
 
   if (!post) {
@@ -181,123 +183,150 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
   }
 
   const likeCount = Number(post.likeCount ?? 0);
+  const showPostContent = initialPost == null;
 
   return (
     <Stack gap={6} as="section">
       {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-      <Stack gap={2}>
-        <Heading level={2}>
-          <Link href={`/u/${post.authorHandle}`}>@{post.authorHandle}</Link>
-        </Heading>
-        <Text color="muted" size="sm">
-          {fmtIso(post.createdAt)} · {post.visibility} · {likeCount} likes · {Number(post.commentCount ?? 0)} comments
-        </Text>
-        <Text>{post.caption}</Text>
-        {Array.isArray(post.tags) && post.tags.length > 0 ? (
-          <Text color="muted" size="sm">
-            {post.tags.map((t) => `#${t}`).join(' ')}
-          </Text>
-        ) : null}
-
-        {Array.isArray(post.media) && post.media.length > 0 ? (
+      {showPostContent ? (
+        <Card className={styles.postCard}>
           <Stack gap={3}>
-            {post.media.map((m) => (
-              <MediaAsset key={m.assetId} assetId={m.assetId} kind={m.kind} />
-            ))}
+            <Inline gap={2} wrap align="center">
+              <Heading level={2} size="_2xl">
+                <Link href={`/u/${post.authorHandle}`}>@{post.authorHandle}</Link>
+              </Heading>
+              <Badge variant="neutral" size="sm">
+                {post.authorRoleLabel}
+              </Badge>
+              <Badge variant={visibilityVariant(post.visibility)} size="sm">
+                {post.visibility}
+              </Badge>
+            </Inline>
+
+            <Text size="sm" className={styles.meta}>
+              {fmtIso(post.createdAt)} · {likeCount} likes · {Number(post.commentCount ?? 0)} comments
+            </Text>
+
+            <Text whitespace="preWrap">{post.caption}</Text>
+
+            {Array.isArray(post.tags) && post.tags.length > 0 ? (
+              <div className={styles.chips} aria-label="Tags">
+                {post.tags.map((t) => (
+                  <Badge key={t} variant="neutral" size="sm" className={styles.chip}>
+                    #{t}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+
+            {Array.isArray(post.media) && post.media.length > 0 ? (
+              <Stack gap={3}>
+                {post.media.map((m) => (
+                  <MediaAsset key={m.assetId} assetId={m.assetId} kind={m.kind} />
+                ))}
+              </Stack>
+            ) : null}
           </Stack>
-        ) : null}
-      </Stack>
+        </Card>
+      ) : null}
 
-      <Inline gap={3} wrap align="center">
-        <Button
-          variant={liked ? 'secondary' : 'primary'}
-          disabled={!viewerUid || likeBusy}
-          onClick={async () => {
-            if (!viewerUid) return;
-            setLikeBusy(true);
-            setErrMsg(null);
-            try {
-              const res = await callToggleLike({ postId: post.postId, like: !liked });
-              const nextCount = Number((res.data as any)?.likeCount ?? likeCount);
-              setLiked(!liked);
-              setPost({ ...post, likeCount: nextCount });
-            } catch (e: any) {
-              setErrMsg(e?.message ?? 'Failed to toggle like');
-            } finally {
-              setLikeBusy(false);
-            }
-          }}
-        >
-          {liked ? 'Unlike' : 'Like'}
-        </Button>
+      <Card className={styles.actionCard}>
+        <Stack gap={4}>
+          <Inline gap={3} wrap align="center">
+            <Button
+              variant={liked ? 'secondary' : 'primary'}
+              disabled={!viewerUid || likeBusy}
+              onClick={async () => {
+                if (!viewerUid) return;
+                setLikeBusy(true);
+                setErrMsg(null);
+                try {
+                  const res = await callToggleLike({ postId: post.postId, like: !liked });
+                  const nextCount = Number((res.data as any)?.likeCount ?? likeCount);
+                  setLiked(!liked);
+                  setPost({ ...post, likeCount: nextCount });
+                } catch (e: any) {
+                  setErrMsg(e?.message ?? 'Failed to toggle like');
+                } finally {
+                  setLikeBusy(false);
+                }
+              }}
+            >
+              {liked ? 'Unlike' : 'Like'}
+            </Button>
 
-        <Button
-          variant="ghost"
-          disabled={!viewerUid || commentBusy}
-          onClick={() => {
-            const el = document.getElementById('comment-body');
-            if (el) (el as HTMLInputElement).focus();
-          }}
-        >
-          Comment
-        </Button>
+            <Button
+              variant="ghost"
+              disabled={!viewerUid || commentBusy}
+              onClick={() => {
+                const el = document.getElementById('comment-body');
+                if (el) (el as HTMLTextAreaElement).focus();
+              }}
+            >
+              Comment
+            </Button>
 
-        <Button
-          variant="ghost"
-          disabled={!viewerUid || reportBusy}
-          onClick={() => {
-            setReportMode(!reportMode);
-            setErrMsg(null);
-          }}
-        >
-          Report
-        </Button>
+            <Button
+              variant="ghost"
+              disabled={!viewerUid || reportBusy}
+              onClick={() => {
+                setReportMode(!reportMode);
+                setErrMsg(null);
+              }}
+            >
+              Report
+            </Button>
 
-        {canEdit ? (
-          <Button
-            variant="secondary"
-            disabled={editBusy}
-            onClick={() => {
-              setEditMode(!editMode);
-              setErrMsg(null);
-            }}
-          >
-            {editMode ? 'Close edit' : 'Edit'}
-          </Button>
-        ) : null}
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                disabled={editBusy}
+                onClick={() => {
+                  setEditMode(!editMode);
+                  setErrMsg(null);
+                }}
+              >
+                {editMode ? 'Close edit' : 'Edit'}
+              </Button>
+            ) : null}
 
-        {canEdit ? (
-          <Button
-            variant="secondary"
-            disabled={editBusy}
-            onClick={async () => {
-              setEditBusy(true);
-              setErrMsg(null);
-              try {
-                await callDeletePost({ postId: post.postId });
-                await refreshPost();
-              } catch (e: any) {
-                setErrMsg(e?.message ?? 'Failed to delete post');
-              } finally {
-                setEditBusy(false);
-              }
-            }}
-          >
-            Delete
-          </Button>
-        ) : null}
-      </Inline>
+            {canEdit ? (
+              <Button
+                variant="secondary"
+                disabled={editBusy}
+                onClick={async () => {
+                  setEditBusy(true);
+                  setErrMsg(null);
+                  try {
+                    await callDeletePost({ postId: post.postId });
+                    await refreshPost();
+                  } catch (e: any) {
+                    setErrMsg(e?.message ?? 'Failed to delete post');
+                  } finally {
+                    setEditBusy(false);
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            ) : null}
+          </Inline>
+
+          <Text size="sm" className={styles.meta}>
+            {post.visibility} · {likeCount} likes · {Number(post.commentCount ?? 0)} comments
+          </Text>
+        </Stack>
+      </Card>
 
       {reportMode ? (
         <Stack gap={3} as="section">
           <Heading level={3}>Report post</Heading>
           <Field label="Reason" htmlFor="report-reason">
-            <select
+            <Select
               id="report-reason"
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
-              style={{ width: '100%', padding: 12, borderRadius: 12 }}
             >
               <option value="spam">Spam</option>
               <option value="harassment">Harassment</option>
@@ -305,15 +334,16 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
               <option value="sexual">Sexual content</option>
               <option value="copyright">Copyright</option>
               <option value="other">Other</option>
-            </select>
+            </Select>
           </Field>
           <Field label="Message" htmlFor="report-message" helpText="Tell us what’s wrong (required).">
-            <Input
+            <Textarea
               id="report-message"
               value={reportMessage}
               onChange={(e) => setReportMessage(e.target.value)}
               placeholder="Describe the issue…"
               disabled={!viewerUid}
+              rows={4}
             />
           </Field>
           <Inline gap={3} wrap>
@@ -354,22 +384,21 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
         <Stack gap={3} as="section">
           <Heading level={3}>Edit post</Heading>
           <Field label="Caption" htmlFor="edit-caption" required>
-            <Input id="edit-caption" value={editCaption} onChange={(e) => setEditCaption(e.target.value)} />
+            <Textarea id="edit-caption" value={editCaption} onChange={(e) => setEditCaption(e.target.value)} rows={5} />
           </Field>
           <Field label="Tags" htmlFor="edit-tags" helpText="Comma-separated">
-            <Input id="edit-tags" value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+            <Textarea id="edit-tags" value={editTags} onChange={(e) => setEditTags(e.target.value)} rows={2} />
           </Field>
           <Field label="Visibility" htmlFor="edit-visibility">
-            <select
+            <Select
               id="edit-visibility"
               value={editVisibility}
               onChange={(e) => setEditVisibility(e.target.value as any)}
-              style={{ width: '100%', padding: 12, borderRadius: 12 }}
             >
               <option value="public">Public</option>
               <option value="followers">Followers</option>
               <option value="private">Private</option>
-            </select>
+            </Select>
           </Field>
           <Inline gap={3} wrap>
             <Button
@@ -431,12 +460,13 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
           }}
         >
           <Field label="Add a comment" htmlFor="comment-body">
-            <Input
+            <Textarea
               id="comment-body"
               value={commentBody}
               onChange={(e) => setCommentBody(e.target.value)}
               placeholder="Write a comment…"
               disabled={!viewerUid}
+              rows={3}
             />
           </Field>
           <Inline gap={3} wrap>
@@ -451,73 +481,81 @@ export function PostViewerClient({ postId, initialPost }: { postId: string; init
 
         {comments.length === 0 ? <Text color="muted">No comments yet.</Text> : null}
         {comments.length > 0 ? (
-          <Stack gap={2}>
+          <div className={styles.commentList}>
             {comments.map((c) => {
               const canDeleteComment = isAdmin || (viewerUid && (viewerUid === c.authorUid || viewerUid === post.authorUid));
               return (
-                <Stack key={c.commentId} gap={1}>
-                  <Inline gap={2} wrap align="center">
-                    <Text as="span" size="sm">
-                      <Link href={`/u/${c.authorHandle}`}>@{c.authorHandle}</Link>
-                    </Text>
-                    <Text as="span" size="sm" color="muted">
-                      {fmtIso(c.createdAt)}
-                    </Text>
-                    {viewerUid && viewerUid !== c.authorUid ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={commentBusy}
-                        onClick={async () => {
-                          const msg = window.prompt('Why are you reporting this comment?');
-                          if (!msg) return;
-                          setCommentBusy(true);
-                          setErrMsg(null);
-                          try {
-                            await callReportComment({
-                              postId: post.postId,
-                              commentId: c.commentId,
-                              reasonCode: 'other',
-                              message: msg
-                            });
-                          } catch (e: any) {
-                            setErrMsg(e?.message ?? 'Failed to report comment');
-                          } finally {
-                            setCommentBusy(false);
-                          }
-                        }}
-                      >
-                        Report
-                      </Button>
-                    ) : null}
-                    {canDeleteComment ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={commentBusy}
-                        onClick={async () => {
-                          setCommentBusy(true);
-                          setErrMsg(null);
-                          try {
-                            await callDeleteComment({ postId: post.postId, commentId: c.commentId });
-                            await refreshComments(post);
-                            await refreshPost();
-                          } catch (e: any) {
-                            setErrMsg(e?.message ?? 'Failed to delete comment');
-                          } finally {
-                            setCommentBusy(false);
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    ) : null}
-                  </Inline>
-                  <Text>{c.body}</Text>
-                </Stack>
+                <div key={c.commentId} className={styles.commentRow}>
+                  <div className={styles.commentHeader}>
+                    <div className={styles.commentMeta}>
+                      <Text as="span" size="sm" className={styles.meta}>
+                        <Link href={`/u/${c.authorHandle}`}>@{c.authorHandle}</Link>
+                      </Text>
+                      <Text as="span" size="sm" className={styles.meta}>
+                        {fmtIso(c.createdAt)}
+                      </Text>
+                    </div>
+
+                    <Inline gap={2} wrap align="center">
+                      {viewerUid && viewerUid !== c.authorUid ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={commentBusy}
+                          onClick={async () => {
+                            const msg = window.prompt('Why are you reporting this comment?');
+                            if (!msg) return;
+                            setCommentBusy(true);
+                            setErrMsg(null);
+                            try {
+                              await callReportComment({
+                                postId: post.postId,
+                                commentId: c.commentId,
+                                reasonCode: 'other',
+                                message: msg
+                              });
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed to report comment');
+                            } finally {
+                              setCommentBusy(false);
+                            }
+                          }}
+                        >
+                          Report
+                        </Button>
+                      ) : null}
+                      {canDeleteComment ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={commentBusy}
+                          onClick={async () => {
+                            setCommentBusy(true);
+                            setErrMsg(null);
+                            try {
+                              await callDeleteComment({ postId: post.postId, commentId: c.commentId });
+                              await refreshComments(post);
+                              await refreshPost();
+                            } catch (e: any) {
+                              setErrMsg(e?.message ?? 'Failed to delete comment');
+                            } finally {
+                              setCommentBusy(false);
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      ) : null}
+                    </Inline>
+                  </div>
+
+                  <div className={styles.commentBody}>
+                    <Text whitespace="preWrap">{c.body}</Text>
+                  </div>
+                </div>
               );
             })}
-          </Stack>
+          </div>
         ) : null}
       </Stack>
     </Stack>

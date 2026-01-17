@@ -1,12 +1,12 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-4);
 }
 
 @media (max-width: 900px) {
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
@@ -55,8 +55,8 @@
 .cardTitle {
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: 0.04em;
-  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  font-size: 1rem;
 }
 
 .selectedBadge {
@@ -86,4 +86,3 @@
 .actions {
   padding: 0 var(--spacing-4) var(--spacing-4);
 }
-

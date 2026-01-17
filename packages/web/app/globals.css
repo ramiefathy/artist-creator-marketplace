@@ -86,212 +86,222 @@ h6 {
   --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
 
   --container-padding-x: 1.5rem;
+
+  /* App-level surfaces */
+  --app-bg-gradient: none;
+  --app-grain: none;
+  --app-grain-opacity: 0;
+
+  /* UI tokens (mode overrides) */
+  --ui-nav-bg: rgba(255, 255, 255, 0.8);
+  --ui-nav-border: rgba(15, 23, 42, 0.12);
+  --ui-nav-backdrop-filter: blur(10px);
+
+  --ui-card-bg: var(--color-surface);
+  --ui-card-border: var(--color-border);
+
+  --ui-input-bg: var(--color-surface);
+  --ui-input-border: var(--color-border);
+  --ui-input-border-hover: var(--color-border-strong);
+
+  --ui-button-font: var(--font-body);
+  --ui-button-letter-spacing: 0.01em;
+  --ui-button-text-transform: none;
+
+  --ui-badge-font: var(--font-body);
+  --ui-badge-letter-spacing: 0.01em;
+  --ui-badge-text-transform: none;
+
+  /* Social UI tokens (mode overrides) */
+  --social-composer-bg: var(--ui-card-bg, var(--color-surface));
+  --social-composer-border: var(--ui-card-border, var(--color-border));
+  --social-composer-accent: var(--color-accent);
+  --social-composer-rule: none;
+  --social-composer-rule-opacity: 0;
+
+  --social-chip-bg: var(--color-bg-subtle);
+  --social-chip-border: var(--color-border);
+  --social-chip-text: var(--color-text-muted);
+
+  --social-meta-text: var(--color-text-muted);
+  --social-divider: var(--color-border);
 }
 
 /* ============================================
-   THEME: NOIR
+   MODE: STUDIO DESK (light-first)
    ============================================ */
-html[data-theme="noir"] {
-  --color-bg: #0a0a0f;
-  --color-bg-subtle: #12121a;
-  --color-surface: #12121a;
-  --color-surface-hover: rgba(255, 255, 255, 0.08);
+html[data-theme="studio"] {
+  --color-bg: #f6f7fa;
+  --color-bg-subtle: #eef2f7;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f7faff;
 
-  --color-text: #e8e8ed;
-  --color-text-muted: rgba(255, 255, 255, 0.6);
-  --color-text-subtle: rgba(255, 255, 255, 0.4);
+  --color-text: #101622;
+  --color-text-muted: #5b677a;
+  --color-text-subtle: #7c8798;
 
-  --color-primary: #00f0ff;
-  --color-primary-hover: #00d4e0;
-  --color-on-primary: #0a0a0f;
-  --color-accent: #ff00ff;
+  --color-primary: #101b2d;
+  --color-primary-hover: #162744;
+  --color-on-primary: #ffffff;
+  --color-accent: #b08d57;
 
-  --color-border: rgba(255, 255, 255, 0.12);
-  --color-border-strong: rgba(255, 255, 255, 0.24);
-  --color-border-focus: #00f0ff;
+  --color-border: #d9dfea;
+  --color-border-strong: #c3ccda;
+  --color-border-focus: #2b59ff;
 
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-success: #0f8b5f;
+  --color-warning: #b45309;
+  --color-error: #b42318;
+  --color-info: #1d4ed8;
 
-  --color-link: #00f0ff;
-  --color-link-hover: #00d4e0;
+  --color-link: #2b59ff;
+  --color-link-hover: #1f46d6;
 
-  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
-    "Segoe UI Emoji";
-  --font-body: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
-    "Segoe UI Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial;
+  --font-body: var(--font-spline-sans), ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial;
+  --font-mono: var(--font-azeret-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
   --radius-lg: 18px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
-  --shadow-glow: 0 0 24px rgba(0, 240, 255, 0.12);
-  --shadow-button: 0 0 12px rgba(0, 240, 255, 0.1);
-  --shadow-button-hover: 0 0 20px rgba(0, 240, 255, 0.2);
+  --shadow-sm: 0 1px 1px rgba(16, 22, 34, 0.06), 0 2px 8px rgba(16, 22, 34, 0.05);
+  --shadow-md: 0 8px 24px rgba(16, 22, 34, 0.08);
+  --shadow-lg: 0 18px 44px rgba(16, 22, 34, 0.12);
+  --shadow-glow: 0 0 0 rgba(0, 0, 0, 0);
+  --shadow-button: 0 8px 20px rgba(16, 22, 34, 0.10);
+  --shadow-button-hover: 0 12px 28px rgba(16, 22, 34, 0.14);
 
   --button-hover-transform: translateY(-1px);
-  --card-hover-transform: translateY(-1px);
-}
-
-/* ============================================
-   THEME: ANALOG
-   ============================================ */
-html[data-theme="analog"] {
-  --color-bg: #faf6f1;
-  --color-bg-subtle: #fff8f0;
-  --color-surface: #fff8f0;
-  --color-surface-hover: rgba(45, 36, 24, 0.05);
-
-  --color-text: #2d2418;
-  --color-text-muted: rgba(45, 36, 24, 0.55);
-  --color-text-subtle: rgba(45, 36, 24, 0.35);
-
-  --color-primary: #d4582a;
-  --color-primary-hover: #cf5529;
-  --color-on-primary: #000000;
-  --color-accent: #1a5f4a;
-
-  --color-border: rgba(45, 36, 24, 0.08);
-  --color-border-strong: rgba(45, 36, 24, 0.15);
-  --color-border-focus: #d4582a;
-
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
-
-  /* NOTE: link is intentionally darker than primary to meet WCAG AA on bg */
-  --color-link: #c04d24;
-  --color-link-hover: #a84622;
-
-  --font-display: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-body: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 1px 2px rgba(45, 36, 24, 0.06);
-  --shadow-md: 0 2px 8px rgba(45, 36, 24, 0.08);
-  --shadow-lg: 0 4px 16px rgba(45, 36, 24, 0.1);
-  --shadow-glow: none;
-  --shadow-button: 0 2px 4px rgba(45, 36, 24, 0.08);
-  --shadow-button-hover: 0 4px 8px rgba(45, 36, 24, 0.12);
-
-  --button-hover-transform: translateY(-2px) rotate(-0.5deg);
-  --card-hover-transform: translateY(-2px) rotate(0.5deg);
-}
-
-/* ============================================
-   THEME: LUMA (default)
-   ============================================ */
-html,
-html[data-theme="luma"] {
-  --color-bg: #ffffff;
-  --color-bg-subtle: #f8f9fb;
-  --color-surface: #ffffff;
-  --color-surface-hover: #f8fafc;
-
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-text-subtle: #94a3b8;
-
-  --color-primary: #0f1729;
-  --color-primary-hover: #1a2744;
-  --color-on-primary: #ffffff;
-  --color-accent: #6366f1;
-
-  --color-border: #e2e8f0;
-  --color-border-strong: #cbd5e1;
-  --color-border-focus: #6366f1;
-
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
-
-  /* NOTE: slightly darker than #6366f1 to meet WCAG AA on white */
-  --color-link: #4f46e5;
-  --color-link-hover: #4338ca;
-
-  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  --font-body: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.06);
-  --shadow-glow: none;
-  --shadow-button: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-button-hover: 0 2px 4px rgba(0, 0, 0, 0.08);
-
-  --button-hover-transform: translateY(-1px);
-  --card-hover-transform: none;
-}
-
-/* ============================================
-   THEME: FLUX
-   ============================================ */
-html[data-theme="flux"] {
-  --color-bg: #f5f0e8;
-  --color-bg-subtle: #f0ebe3;
-  --color-surface: #ffffff;
-  --color-surface-hover: rgba(13, 13, 13, 0.05);
-
-  --color-text: #0d0d0d;
-  --color-text-muted: rgba(13, 13, 13, 0.55);
-  --color-text-subtle: rgba(13, 13, 13, 0.35);
-
-  --color-primary: #ff3d00;
-  --color-primary-hover: #e63600;
-  --color-on-primary: #0d0d0d;
-  --color-accent: #1400ff;
-
-  --color-border: rgba(13, 13, 13, 0.1);
-  --color-border-strong: rgba(13, 13, 13, 0.2);
-  --color-border-focus: #ff3d00;
-
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
-
-  /* NOTE: link is intentionally darker than primary to meet WCAG AA on bg */
-  --color-link: #cc3303;
-  --color-link-hover: #b32d03;
-
-  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  --font-body: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-
-  --radius-sm: 0;
-  --radius-md: 4px;
-  --radius-lg: 8px;
-  --radius-full: 9999px;
-
-  --shadow-sm: 0 2px 4px rgba(13, 13, 13, 0.06);
-  --shadow-md: 0 4px 12px rgba(13, 13, 13, 0.08);
-  --shadow-lg: 0 10px 28px rgba(13, 13, 13, 0.12);
-  --shadow-glow: none;
-  --shadow-button: 0 2px 8px rgba(13, 13, 13, 0.08);
-  --shadow-button-hover: 0 4px 16px rgba(13, 13, 13, 0.12);
-
-  --button-hover-transform: translateY(-2px);
   --card-hover-transform: translateY(-2px);
+
+  --ui-nav-bg: color-mix(in srgb, var(--color-bg) 74%, transparent);
+  --ui-nav-border: color-mix(in srgb, var(--color-border) 85%, transparent);
+  --ui-nav-backdrop-filter: blur(12px) saturate(140%);
+
+  --ui-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #ffffff 42%);
+  --ui-card-border: color-mix(in srgb, var(--color-border) 92%, #ffffff);
+
+  --ui-input-bg: #fcfdff;
+  --ui-input-border: color-mix(in srgb, var(--color-border) 92%, #ffffff);
+  --ui-input-border-hover: var(--color-border-strong);
+
+  --ui-button-font: var(--font-body);
+  --ui-button-letter-spacing: 0.01em;
+  --ui-button-text-transform: none;
+
+  --ui-badge-font: var(--font-body);
+  --ui-badge-letter-spacing: 0.01em;
+  --ui-badge-text-transform: none;
+
+  --social-composer-accent: color-mix(in srgb, var(--color-link) 72%, var(--color-accent));
+  --social-chip-bg: color-mix(in srgb, rgba(43, 89, 255, 0.10) 70%, var(--color-bg-subtle));
+  --social-chip-border: rgba(43, 89, 255, 0.22);
+  --social-chip-text: var(--color-text);
+  --social-divider: color-mix(in srgb, var(--color-border) 90%, transparent);
+
+  --app-bg-gradient:
+    radial-gradient(900px 540px at 12% -10%, rgba(43, 89, 255, 0.12), transparent 60%),
+    radial-gradient(800px 520px at 92% -12%, rgba(176, 141, 87, 0.14), transparent 55%),
+    linear-gradient(to bottom, var(--color-bg), var(--color-bg-subtle));
+  --app-grain:
+    repeating-radial-gradient(circle at 0 0, rgba(16, 22, 34, 0.05) 0, rgba(16, 22, 34, 0.05) 1px, transparent 1px, transparent 3px);
+  --app-grain-opacity: 0.10;
+}
+
+/* ============================================
+   MODE: LINER NOTES (light-first)
+   ============================================ */
+html[data-theme="liner"] {
+  --color-bg: #fbf6ee;
+  --color-bg-subtle: #f6efe4;
+  --color-surface: #fffaf1;
+  --color-surface-hover: #fff3e4;
+
+  --color-text: #2a2118;
+  --color-text-muted: rgba(42, 33, 24, 0.62);
+  --color-text-subtle: rgba(42, 33, 24, 0.40);
+
+  --color-primary: #2a2118;
+  --color-primary-hover: #1f1811;
+  --color-on-primary: #fffaf1;
+  --color-accent: #1f5b4a;
+
+  --color-border: rgba(42, 33, 24, 0.14);
+  --color-border-strong: rgba(42, 33, 24, 0.22);
+  --color-border-focus: #b24a2c;
+
+  --color-success: #0f8b5f;
+  --color-warning: #b45309;
+  --color-error: #b42318;
+  --color-info: #1d4ed8;
+
+  --color-link: #b24a2c;
+  --color-link-hover: #943c24;
+
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-body: var(--font-source-serif-4), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: var(--font-azeret-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 0 rgba(42, 33, 24, 0.06), 0 10px 30px rgba(42, 33, 24, 0.06);
+  --shadow-md: 0 14px 42px rgba(42, 33, 24, 0.09);
+  --shadow-lg: 0 20px 60px rgba(42, 33, 24, 0.12);
+  --shadow-glow: none;
+  --shadow-button: 0 10px 26px rgba(42, 33, 24, 0.10);
+  --shadow-button-hover: 0 14px 34px rgba(42, 33, 24, 0.14);
+
+  --button-hover-transform: translateY(-1px) rotate(-0.2deg);
+  --card-hover-transform: translateY(-2px) rotate(0.15deg);
+
+  --ui-nav-bg: rgba(251, 246, 238, 0.92);
+  --ui-nav-border: rgba(42, 33, 24, 0.14);
+  --ui-nav-backdrop-filter: none;
+
+  --ui-card-bg: linear-gradient(180deg, rgba(255, 252, 246, 0.98), var(--color-surface));
+  --ui-card-border: rgba(42, 33, 24, 0.14);
+
+  --ui-input-bg: rgba(255, 253, 248, 0.92);
+  --ui-input-border: rgba(42, 33, 24, 0.16);
+  --ui-input-border-hover: rgba(42, 33, 24, 0.24);
+
+  --ui-button-font: var(--font-mono);
+  --ui-button-letter-spacing: 0.08em;
+  --ui-button-text-transform: uppercase;
+
+  --ui-badge-font: var(--font-mono);
+  --ui-badge-letter-spacing: 0.08em;
+  --ui-badge-text-transform: uppercase;
+
+  --social-composer-accent: var(--color-link);
+  --social-composer-rule:
+    repeating-linear-gradient(
+      0deg,
+      rgba(42, 33, 24, 0.06) 0,
+      rgba(42, 33, 24, 0.06) 1px,
+      transparent 1px,
+      transparent 22px
+    );
+  --social-composer-rule-opacity: 0.22;
+
+  --social-chip-bg: rgba(178, 74, 44, 0.08);
+  --social-chip-border: rgba(178, 74, 44, 0.20);
+  --social-chip-text: var(--color-text);
+  --social-divider: rgba(42, 33, 24, 0.14);
+
+  --app-bg-gradient:
+    radial-gradient(1000px 700px at 18% -18%, rgba(178, 74, 44, 0.12), transparent 58%),
+    radial-gradient(760px 520px at 88% -10%, rgba(31, 91, 74, 0.10), transparent 60%),
+    linear-gradient(to bottom, var(--color-bg), var(--color-bg-subtle));
+  --app-grain:
+    repeating-linear-gradient(0deg, rgba(42, 33, 24, 0.035) 0, rgba(42, 33, 24, 0.035) 1px, transparent 1px, transparent 5px),
+    repeating-radial-gradient(circle at 0 0, rgba(42, 33, 24, 0.03) 0, rgba(42, 33, 24, 0.03) 1px, transparent 1px, transparent 4px);
+  --app-grain-opacity: 0.22;
 }
 
 /* ============================================
@@ -299,8 +309,30 @@ html[data-theme="flux"] {
    ============================================ */
 body {
   background-color: var(--color-bg);
+  background-image: var(--app-bg-gradient);
   color: var(--color-text);
   font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--app-grain);
+  opacity: var(--app-grain-opacity);
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+main {
+  padding: var(--spacing-10) 0 var(--spacing-16);
 }
 
 a {
@@ -322,14 +354,3 @@ a:hover {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
 }
-
-/* ============================================
-   FLUX ZONE SYSTEM (scoped to FLUX theme)
-   ============================================ */
-html[data-theme="flux"] [data-flux-zone="dashboard"],
-html[data-theme="flux"] [data-flux-zone="forms"],
-html[data-theme="flux"] [data-flux-zone="tables"] {
-  --button-hover-transform: translateY(-1px);
-  --card-hover-transform: none;
-}
-
