@@ -14,4 +14,9 @@ export type NotificationType =
   | 'payout_sent'
   | 'verification_requested'
   | 'verification_decision'
-  | 'admin_message';
+  | 'admin_message'
+  | 'social_follow_requested'
+  | 'social_follow_approved'
+  | 'social_followed'
+  | 'social_comment'
+  | 'social_like';

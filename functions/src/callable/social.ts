@@ -26,6 +26,7 @@ import { isValidHandle, normalizeHandle } from '../utils/handles';
 import { assertCanChangeHandle } from '../utils/handleCooldown';
 import { enforceRateLimit } from '../utils/rateLimit';
 import { assertNotBlocked } from '../utils/blocks';
+import { createNotification } from '../utils/notifications';
 
 function isAnonymousProvider(req: any): boolean {
   const provider = (req?.auth?.token as any)?.firebase?.sign_in_provider;
@@ -135,6 +136,7 @@ export const requestFollow = onCall({ region: 'us-central1' }, async (req) => {
   if (!targetProfileSnap.exists) err('NOT_FOUND', 'TARGET_NOT_FOUND');
   const targetProfile = targetProfileSnap.data() as any;
   const isTargetPrivate = !!targetProfile.isPrivateAccount;
+  const targetHandle = String(targetProfile.handle ?? '').trim();
 
   const status: 'requested' | 'approved' = isTargetPrivate ? 'requested' : 'approved';
 
@@ -142,7 +144,7 @@ export const requestFollow = onCall({ region: 'us-central1' }, async (req) => {
   const followingRef = db().collection('following').doc(viewer.uid).collection('targets').doc(data.targetUid);
   const targetPublicRef = db().collection('publicProfiles').doc(data.targetUid);
 
-  await db().runTransaction(async (tx) => {
+  const transitions = await db().runTransaction(async (tx) => {
     const existingFollower = await tx.get(followerRef);
     const prevStatus = existingFollower.exists ? ((existingFollower.data() as any).status as string) : null;
 
@@ -174,14 +176,43 @@ export const requestFollow = onCall({ region: 'us-central1' }, async (req) => {
     );
 
     // Only increment on transition to approved.
-    if (prevStatus !== 'approved' && nextStatus === 'approved') {
+    const transitionedToApproved = prevStatus !== 'approved' && nextStatus === 'approved';
+    if (transitionedToApproved) {
       const targetSnap = await tx.get(targetPublicRef);
       if (targetSnap.exists) {
         const current = Number((targetSnap.data() as any).followerCount ?? 0);
         tx.update(targetPublicRef, { followerCount: current + 1, updatedAt: now });
       }
     }
+
+    const createdRequest = !existingFollower.exists && nextStatus === 'requested';
+    return { createdRequest, transitionedToApproved, nextStatus };
   });
+
+  // Best-effort notifications: follow requests + new followers.
+  try {
+    if (viewer.uid !== data.targetUid) {
+      if (transitions.createdRequest) {
+        await createNotification({
+          toUid: data.targetUid,
+          type: 'social_follow_requested',
+          title: 'New follow request',
+          body: `@${viewer.handle} requested to follow you.`,
+          link: targetHandle ? `/u/${targetHandle}` : '/me'
+        });
+      } else if (transitions.transitionedToApproved) {
+        await createNotification({
+          toUid: data.targetUid,
+          type: 'social_followed',
+          title: 'New follower',
+          body: `@${viewer.handle} is now following you.`,
+          link: `/u/${viewer.handle}`
+        });
+      }
+    }
+  } catch (e) {
+    console.error('requestFollow: failed to create notification', e);
+  }
 
   return { ok: true, status };
 });
@@ -277,11 +308,11 @@ export const approveFollower = onCall({ region: 'us-central1' }, async (req) => 
   const viewerPublicRef = db().collection('publicProfiles').doc(viewer.uid);
   const now = nowIso();
 
-  await db().runTransaction(async (tx) => {
+  const approved = await db().runTransaction(async (tx) => {
     const followerSnap = await tx.get(followerRef);
     if (!followerSnap.exists) err('NOT_FOUND', 'FOLLOW_REQUEST_NOT_FOUND');
     const prevStatus = (followerSnap.data() as any).status as string;
-    if (prevStatus === 'approved') return;
+    if (prevStatus === 'approved') return false;
 
     tx.set(followerRef, { status: 'approved', updatedAt: now }, { merge: true });
     tx.set(followingRef, { status: 'approved', updatedAt: now }, { merge: true });
@@ -291,7 +322,22 @@ export const approveFollower = onCall({ region: 'us-central1' }, async (req) => 
       const current = Number((viewerSnap.data() as any).followerCount ?? 0);
       tx.update(viewerPublicRef, { followerCount: current + 1, updatedAt: now });
     }
+    return true;
   });
+
+  if (approved) {
+    try {
+      await createNotification({
+        toUid: data.followerUid,
+        type: 'social_follow_approved',
+        title: 'Follow request approved',
+        body: `@${viewer.handle} approved your request.`,
+        link: `/u/${viewer.handle}`
+      });
+    } catch (e) {
+      console.error('approveFollower: failed to create notification', e);
+    }
+  }
 
   return { ok: true };
 });
@@ -515,6 +561,22 @@ export const createComment = onCall({ region: 'us-central1' }, async (req) => {
     tx.update(postRef, { commentCount: current + 1, updatedAt: now });
   });
 
+  if (viewer.uid !== authorUid) {
+    try {
+      const raw = String(data.body ?? '').trim();
+      const snippet = raw.length > 140 ? `${raw.slice(0, 140)}…` : raw;
+      await createNotification({
+        toUid: authorUid,
+        type: 'social_comment',
+        title: 'New comment',
+        body: `@${viewer.handle}: ${snippet}`,
+        link: `/p/${data.postId}`
+      });
+    } catch (e) {
+      console.error('createComment: failed to create notification', e);
+    }
+  }
+
   return { ok: true, commentId: commentRef.id };
 });
 
@@ -560,7 +622,7 @@ export const toggleLike = onCall({ region: 'us-central1' }, async (req) => {
   await assertNotBlocked({ viewerUid: viewer.uid, targetUid: authorUid });
   const likeRef = postRef.collection('likes').doc(viewer.uid);
 
-  const nextCount = await db().runTransaction(async (tx) => {
+  const result = await db().runTransaction(async (tx) => {
     const [postSnap, likeSnap] = await Promise.all([tx.get(postRef), tx.get(likeRef)]);
     if (!postSnap.exists) err('NOT_FOUND', 'POST_NOT_FOUND');
 
@@ -570,19 +632,33 @@ export const toggleLike = onCall({ region: 'us-central1' }, async (req) => {
       if (!likeSnap.exists) {
         tx.set(likeRef, { uid: viewer.uid, createdAt: now });
         tx.update(postRef, { likeCount: currentCount + 1, updatedAt: now });
-        return currentCount + 1;
+        return { likeCount: currentCount + 1, created: true };
       }
-      return currentCount;
+      return { likeCount: currentCount, created: false };
     }
 
     // unlike
     if (likeSnap.exists) {
       tx.delete(likeRef);
       tx.update(postRef, { likeCount: Math.max(0, currentCount - 1), updatedAt: now });
-      return Math.max(0, currentCount - 1);
+      return { likeCount: Math.max(0, currentCount - 1), created: false };
     }
-    return currentCount;
+    return { likeCount: currentCount, created: false };
   });
 
-  return { ok: true, likeCount: nextCount };
+  if (data.like && result.created && viewer.uid !== authorUid) {
+    try {
+      await createNotification({
+        toUid: authorUid,
+        type: 'social_like',
+        title: 'New like',
+        body: `@${viewer.handle} liked your post.`,
+        link: `/p/${data.postId}`
+      });
+    } catch (e) {
+      console.error('toggleLike: failed to create notification', e);
+    }
+  }
+
+  return { ok: true, likeCount: result.likeCount };
 });

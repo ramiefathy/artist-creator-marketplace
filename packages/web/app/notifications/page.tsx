@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { RequireVerified } from '@/components/RequireVerified';
+import { RequireAuth } from '@/components/RequireAuth';
 import { useAuth } from '@/components/AuthProvider';
 import { callMarkNotificationRead } from '@/lib/callables';
 import { Button, Card, Heading, Inline, Section, Stack, Text } from '@/design-system';
@@ -19,6 +19,15 @@ type Notification = {
   read: boolean;
   createdAt: string;
 };
+
+function friendlyType(type: string): string {
+  if (type === 'social_follow_requested') return 'Follow request';
+  if (type === 'social_follow_approved') return 'Follow approved';
+  if (type === 'social_followed') return 'New follower';
+  if (type === 'social_comment') return 'Comment';
+  if (type === 'social_like') return 'Like';
+  return type;
+}
 
 export default function NotificationsPage() {
   const { user } = useAuth();
@@ -43,12 +52,14 @@ export default function NotificationsPage() {
   }, [uid]);
 
   return (
-    <RequireVerified>
+    <RequireAuth>
       <Section as="section" size="lg">
         <Stack gap={6}>
           <Stack gap={2}>
             <Heading level={1}>Notifications</Heading>
-            <Text color="muted">This page shows the 50 most recent in-app notifications. Opening a notification will mark it read.</Text>
+            <Text color="muted">
+              Updates from the marketplace and social. Guests can see social activity here; create an account to access the full marketplace.
+            </Text>
           </Stack>
 
           <Inline gap={3} wrap>
@@ -59,7 +70,7 @@ export default function NotificationsPage() {
 
           {errMsg ? <Text color="error">{errMsg}</Text> : null}
 
-          {items.length === 0 ? <Text>No notifications.</Text> : null}
+          {items.length === 0 ? <Text color="muted">No notifications yet.</Text> : null}
 
           {items.length > 0 ? (
             <Stack gap={3} as="section">
@@ -71,7 +82,7 @@ export default function NotificationsPage() {
                         <strong>{n.title}</strong>
                       </Text>
                       <Text as="span" size="sm" color="muted">
-                        {n.type}
+                        {friendlyType(n.type)}
                       </Text>
                       {n.read ? (
                         <Text as="span" size="sm" color="muted">
@@ -133,6 +144,6 @@ export default function NotificationsPage() {
           ) : null}
         </Stack>
       </Section>
-    </RequireVerified>
+    </RequireAuth>
   );
 }

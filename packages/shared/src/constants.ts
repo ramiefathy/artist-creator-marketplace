@@ -65,7 +65,12 @@ export const NOTIFICATION_TYPES = [
   'deliverable_submitted','deliverable_approved','deliverable_revision','deliverable_rejected',
   'dispute_opened','dispute_resolved','payout_sent',
   'verification_requested','verification_decision',
-  'admin_message'
+  'admin_message',
+  'social_follow_requested',
+  'social_follow_approved',
+  'social_followed',
+  'social_comment',
+  'social_like'
 ] as const;
 export type NotificationType = typeof NOTIFICATION_TYPES[number];
 

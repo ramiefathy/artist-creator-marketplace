@@ -102,7 +102,6 @@ export const getDisputeEvidenceUrls = onCall({ region: 'us-central1' }, async (r
 });
 
 export const markNotificationRead = onCall({ region: 'us-central1' }, async (req) => {
-  requireEmailVerified(req);
   const { uid, role } = requireAuth(req);
   await requireUserActive(uid);
 

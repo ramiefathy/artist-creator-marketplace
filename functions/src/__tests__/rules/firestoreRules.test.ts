@@ -45,6 +45,28 @@ describe('Firestore rules (social + core)', () => {
     await assertSucceeds(getDoc(doc(anonDb, 'publicProfiles', 'u1')));
   });
 
+  test('public can read publicCampaigns/{campaignId}', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, 'publicCampaigns', 'c1'), {
+        campaignId: 'c1',
+        status: 'live',
+        title: 'Campaign',
+        brief: 'This is a public campaign brief that is safe to expose.',
+        platforms: ['tiktok'],
+        deliverableSpec: { deliverablesTotal: 1, deliverableType: 'tiktok_post', dueDaysAfterActivation: 7, postMustRemainLiveDays: 30 },
+        pricing: { currency: 'USD', maxPricePerDeliverableCents: 5000 },
+        artist: { uid: 'a1', handle: 'artist1', displayName: 'Artist' },
+        track: { trackId: 't1', title: 'Track', artistName: 'Artist' },
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      });
+    });
+
+    const anonDb = testEnv.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(anonDb, 'publicCampaigns', 'c1')));
+  });
+
   test('public cannot read users/{uid} or creatorPrivate/{uid}', async () => {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const db = ctx.firestore();
@@ -162,6 +184,11 @@ describe('Firestore rules (social + core)', () => {
     const viewerDb = testEnv.authenticatedContext('viewer', { role: 'unassigned' }).firestore();
     await assertFails(setDoc(doc(viewerDb, 'handles', 'abc'), { handle: 'abc', uid: 'viewer' }));
     await assertFails(setDoc(doc(viewerDb, 'publicProfiles', 'viewer'), { uid: 'viewer', handle: 'abc' }));
+  });
+
+  test('clients cannot write to publicCampaigns directly', async () => {
+    const viewerDb = testEnv.authenticatedContext('viewer', { role: 'unassigned' }).firestore();
+    await assertFails(setDoc(doc(viewerDb, 'publicCampaigns', 'c1'), { campaignId: 'c1', status: 'live', title: 'Nope' }));
   });
 
   test('followers graph read is limited to parties', async () => {

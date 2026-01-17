@@ -31,3 +31,90 @@
   padding-top: var(--spacing-6);
 }
 
+.hubHero {
+  padding: var(--spacing-12) 0 var(--spacing-8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.hubActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
+}
+
+.hubGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-4);
+  padding: var(--spacing-10) 0;
+}
+
+.hubModule {
+  grid-column: span 12;
+  padding: var(--spacing-6);
+  border-radius: 22px;
+  border: 1px solid var(--ui-card-border);
+  background: var(--ui-card-bg);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}
+
+.hubModuleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.hubList {
+  margin-top: var(--spacing-4);
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.hubItem {
+  padding: var(--spacing-4);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+}
+
+.hubItemTitle {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hubItemTitle:hover {
+  text-decoration: underline;
+}
+
+.hubMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+}
+
+.hubPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-subtle) 70%, transparent);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 980px) {
+  .hubModule {
+    grid-column: span 6;
+  }
+
+  .hubModuleWide {
+    grid-column: span 12;
+  }
+}

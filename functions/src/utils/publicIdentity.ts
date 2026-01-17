@@ -15,7 +15,15 @@ export async function ensurePublicIdentity(params: {
   const existing = await publicProfilesCol.doc(uid).get();
   if (existing.exists) {
     const d = existing.data() as any;
-    if (d?.handle) return { handle: String(d.handle), displayName: String(d.displayName ?? 'User') };
+    const handle = d?.handle ? String(d.handle) : '';
+    const displayName = String(d.displayName ?? 'User');
+    if (handle) {
+      const currentRoleLabel = String(d.roleLabel ?? '');
+      if (params.roleLabel && currentRoleLabel !== params.roleLabel) {
+        await publicProfilesCol.doc(uid).set({ roleLabel: params.roleLabel, updatedAt: nowIso() }, { merge: true });
+      }
+      return { handle, displayName };
+    }
   }
 
   const now = nowIso();
@@ -66,4 +74,3 @@ export async function ensurePublicIdentity(params: {
 
   return { handle, displayName };
 }
-

@@ -8,7 +8,7 @@ export { requestCreatorVerification, adminSetCreatorVerification } from './calla
 export { creatorStartStripeOnboarding, creatorRefreshStripeOnboarding, creatorSyncStripeOnboardingStatus } from './callable/stripeConnect';
 
 export { createTrack, registerTrackRightsDocument } from './callable/tracks';
-export { createCampaign, publishCampaign, updateCampaignStatus, updateCampaign } from './callable/campaigns';
+export { createCampaign, publishCampaign, setCampaignPublicVisibility, updateCampaignStatus, updateCampaign } from './callable/campaigns';
 
 export { submitOffer, withdrawOffer, acceptOffer, rejectOffer } from './callable/offers';
 

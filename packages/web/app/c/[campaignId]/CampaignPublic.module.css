@@ -1,0 +1,67 @@
+.hero {
+  padding: var(--spacing-10) var(--spacing-6);
+  border-radius: 24px;
+  border: 1px solid var(--ui-card-border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ui-card-bg) 88%, transparent), var(--ui-card-bg));
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.10);
+}
+
+.heroTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-6);
+  flex-wrap: wrap;
+}
+
+.heroActions {
+  display: flex;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-6);
+}
+
+.metaCard {
+  grid-column: span 12;
+  padding: var(--spacing-4);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+}
+
+.metaLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.metaValue {
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.sectionCard {
+  padding: var(--spacing-6);
+  border-radius: 20px;
+  border: 1px solid var(--ui-card-border);
+  background: var(--ui-card-bg);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+@media (min-width: 900px) {
+  .metaCard {
+    grid-column: span 3;
+  }
+}
+

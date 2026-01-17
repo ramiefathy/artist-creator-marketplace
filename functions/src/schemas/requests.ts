@@ -174,6 +174,7 @@ export const createCampaignSchema = {
     trackId: { type: 'string', minLength: 1 },
     title: { type: 'string', minLength: 5, maxLength: 120 },
     brief: { type: 'string', minLength: 50, maxLength: 4000 },
+    isPubliclyVisible: { type: 'boolean' },
     platforms: { type: 'array', minItems: 1, maxItems: 3, uniqueItems: true, items: { type: 'string', enum: ['tiktok','instagram','youtube'] } },
     deliverableSpec: {
       type: 'object',
@@ -214,6 +215,16 @@ export const publishCampaignSchema = {
   properties: { campaignId: { type: 'string', minLength: 1 } }
 } as const;
 
+export const setCampaignPublicVisibilitySchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['campaignId', 'isPubliclyVisible'],
+  properties: {
+    campaignId: { type: 'string', minLength: 1 },
+    isPubliclyVisible: { type: 'boolean' }
+  }
+} as const;
+
 export const updateCampaignSchema = {
   type: 'object',
   additionalProperties: false,
@@ -226,6 +237,7 @@ export const updateCampaignSchema = {
       properties: {
         title: { type: 'string', minLength: 5, maxLength: 120 },
         brief: { type: 'string', minLength: 50, maxLength: 4000 },
+        isPubliclyVisible: { type: 'boolean' },
         platforms: {
           type: 'array',
           minItems: 1,

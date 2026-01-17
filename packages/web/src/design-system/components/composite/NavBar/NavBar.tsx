@@ -81,6 +81,12 @@ export function NavBar() {
                   <Link href="/explore" className={linkClass('/explore')}>
                     Explore
                   </Link>
+                  <Link href="/campaigns" className={linkClass('/campaigns')}>
+                    Campaigns
+                  </Link>
+                  <Link href="/people" className={linkClass('/people')}>
+                    People
+                  </Link>
                   {user ? (
                     <Link href="/following" className={linkClass('/following')}>
                       Following
@@ -97,9 +103,11 @@ export function NavBar() {
 
               {!loading && user ? (
                 <>
-                  <Link href="/messages" className={linkClass('/messages')}>
-                    Messages
-                  </Link>
+                  {!user.isAnonymous && user.emailVerified ? (
+                    <Link href="/messages" className={linkClass('/messages')}>
+                      Messages
+                    </Link>
+                  ) : null}
                   <Link href="/notifications" className={linkClass('/notifications')}>
                     Notifications
                   </Link>

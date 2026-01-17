@@ -21,6 +21,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /publicCampaigns/{campaignId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     function isApprovedFollowerOf(authorUid) {
       return signedIn() &&
         exists(/databases/$(database)/documents/follows/$(authorUid)/followers/$(request.auth.uid)) &&

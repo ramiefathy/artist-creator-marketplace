@@ -18,6 +18,7 @@ export const callRegisterTrackRightsDocument = httpsCallable(functions, 'registe
 
 export const callCreateCampaign = httpsCallable(functions, 'createCampaign');
 export const callPublishCampaign = httpsCallable(functions, 'publishCampaign');
+export const callSetCampaignPublicVisibility = httpsCallable(functions, 'setCampaignPublicVisibility');
 export const callUpdateCampaign = httpsCallable(functions, 'updateCampaign');
 export const callUpdateCampaignStatus = httpsCallable(functions, 'updateCampaignStatus');
 

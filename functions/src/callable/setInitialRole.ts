@@ -23,6 +23,7 @@ export const setInitialRole = onCall({ region: 'us-central1' }, async (req): Pro
 
   const now = nowIso();
   const userRef = db().collection('users').doc(uid);
+  const publicProfileRef = db().collection('publicProfiles').doc(uid);
 
   await db().runTransaction(async (tx) => {
     const userSnap = await tx.get(userRef);
@@ -32,6 +33,7 @@ export const setInitialRole = onCall({ region: 'us-central1' }, async (req): Pro
     if (user.role && user.role !== 'unassigned') err('FAILED_PRECONDITION', 'ROLE_ALREADY_SET');
 
     tx.update(userRef, { role: data.role, updatedAt: now });
+    tx.set(publicProfileRef, { roleLabel: data.role, updatedAt: now }, { merge: true });
 
     if (data.role === 'artist') {
       const artistRef = db().collection('artistProfiles').doc(uid);

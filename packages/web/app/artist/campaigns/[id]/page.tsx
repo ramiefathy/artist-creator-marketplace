@@ -6,7 +6,7 @@ import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firesto
 import { db } from '@/lib/firebase';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
-import { callPublishCampaign, callAcceptOffer, callRejectOffer } from '@/lib/callables';
+import { callAcceptOffer, callPublishCampaign, callRejectOffer, callSetCampaignPublicVisibility } from '@/lib/callables';
 import { Button, Card, Heading, Inline, Section, Stack, Text, useToast } from '@/design-system';
 
 export default function ArtistCampaignPage({ params }: { params: { id: string } }) {
@@ -56,6 +56,39 @@ export default function ArtistCampaignPage({ params }: { params: { id: string } 
                     </Heading>
                     <Text>Status: {campaign.status}</Text>
                     <Text>Track: {campaign.trackId}</Text>
+                    <Text>
+                      Public page:{' '}
+                      <strong>{campaign.isPubliclyVisible ? 'Enabled' : 'Disabled'}</strong>
+                      {campaign.isPubliclyVisible ? (
+                        <>
+                          {' '}
+                          · <Link href={`/c/${campaignId}`}>/c/{campaignId}</Link>
+                        </>
+                      ) : null}
+                    </Text>
+                    <Inline gap={3} wrap>
+                      <Button
+                        variant={campaign.isPubliclyVisible ? 'secondary' : 'primary'}
+                        onClick={async () => {
+                          setErrMsg(null);
+                          try {
+                            await callSetCampaignPublicVisibility({ campaignId, isPubliclyVisible: !campaign.isPubliclyVisible });
+                            await refresh();
+                            pushToast({
+                              title: campaign.isPubliclyVisible ? 'Public page disabled' : 'Public page enabled',
+                              variant: 'success'
+                            });
+                          } catch (e: any) {
+                            setErrMsg(e?.message ?? 'Failed');
+                          }
+                        }}
+                      >
+                        {campaign.isPubliclyVisible ? 'Disable public page' : 'Enable public page'}
+                      </Button>
+                      <Text size="sm" color="muted">
+                        Draft campaigns stay private. Public pages appear once the campaign is live.
+                      </Text>
+                    </Inline>
                     {campaign.status === 'draft' ? (
                       <div>
                         <Button

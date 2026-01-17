@@ -38,6 +38,7 @@ export default function ArtistDashboard() {
   const [deliverablesTotal, setDeliverablesTotal] = useState(1);
   const [dueDays, setDueDays] = useState(7);
   const [maxPriceCents, setMaxPriceCents] = useState(5000);
+  const [campaignPublic, setCampaignPublic] = useState(false);
 
   async function refresh() {
     if (!uid) return;
@@ -190,18 +191,19 @@ export default function ArtistDashboard() {
                         setErrMsg('Select a track first');
                         return;
                       }
-                      setBusy(true);
-                      setErrMsg(null);
-                      try {
-                        await callCreateCampaign({
-                          trackId: campaignTrackId,
-                          title: campaignTitle,
-                          brief: campaignBrief,
-                          platforms: ['tiktok'],
-                          deliverableSpec: { deliverablesTotal, deliverableType: 'tiktok_post', dueDaysAfterActivation: dueDays },
-                          contentGuidelines: {
-                            disclosureTextExample: 'Paid partnership #ad',
-                            hashtags: ['#ad'],
+                        setBusy(true);
+                        setErrMsg(null);
+                        try {
+                          await callCreateCampaign({
+                            trackId: campaignTrackId,
+                            title: campaignTitle,
+                            brief: campaignBrief,
+                            isPubliclyVisible: campaignPublic,
+                            platforms: ['tiktok'],
+                            deliverableSpec: { deliverablesTotal, deliverableType: 'tiktok_post', dueDaysAfterActivation: dueDays },
+                            contentGuidelines: {
+                              disclosureTextExample: 'Paid partnership #ad',
+                              hashtags: ['#ad'],
                             callToAction: null,
                             doNotInclude: null
                           },
@@ -210,6 +212,7 @@ export default function ArtistDashboard() {
 
                         setCampaignTitle('');
                         setCampaignBrief('');
+                        setCampaignPublic(false);
                         await refresh();
                       } catch (e: any) {
                         setErrMsg(e?.message ?? 'Failed');
@@ -236,6 +239,23 @@ export default function ArtistDashboard() {
                     <Field label="Brief" htmlFor="campaignBrief" required>
                       <Textarea id="campaignBrief" value={campaignBrief} onChange={(e) => setCampaignBrief(e.target.value)} required rows={5} />
                     </Field>
+
+                    <Stack gap={2} as="section">
+                      <Inline gap={3} wrap align="center">
+                        <Text color="muted">Public campaign page (SEO):</Text>
+                        <Button
+                          type="button"
+                          variant={campaignPublic ? 'primary' : 'secondary'}
+                          disabled={busy}
+                          onClick={() => setCampaignPublic((v) => !v)}
+                        >
+                          {campaignPublic ? 'On' : 'Off'}
+                        </Button>
+                        <Text size="sm" color="muted">
+                          If enabled, this campaign will get a shareable public page at <strong>/c/&lt;campaignId&gt;</strong> after you publish it.
+                        </Text>
+                      </Inline>
+                    </Stack>
 
                     <Grid gap={4} minItemWidth={220}>
                       <Field label="Deliverables total" htmlFor="deliverablesTotal" required>
