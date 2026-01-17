@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthProvider';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callAdminSetCreatorVerification, callAdminGetCreatorEvidenceUrls } from '@/lib/callables';
@@ -11,6 +12,7 @@ import { Badge, Button, ButtonLink, Card, Field, Heading, Mono, Section, Stack, 
 export default function AdminCreatorPage({ params }: { params: { uid: string } }) {
   const creatorUid = params.uid;
 
+  const { user, loading, role } = useAuth();
   const { pushToast } = useToast();
 
   const [profile, setProfile] = useState<any | null>(null);
@@ -31,9 +33,10 @@ export default function AdminCreatorPage({ params }: { params: { uid: string } }
   }
 
   useEffect(() => {
+    if (loading || !user || role !== 'admin') return;
     refresh().catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [creatorUid]);
+  }, [creatorUid, loading, user?.uid, role]);
 
   return (
     <RequireVerified>

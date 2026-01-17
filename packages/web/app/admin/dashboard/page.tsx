@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthProvider';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { Card, Heading, Section, Stack, Text } from '@/design-system';
 
 export default function AdminDashboard() {
+  const { user, loading, role } = useAuth();
   const [pendingCreators, setPendingCreators] = useState<any[]>([]);
 
   async function refresh() {
@@ -17,8 +19,11 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    // Avoid noisy "Missing or insufficient permissions" errors caused by querying before auth/claims are ready.
+    if (loading || !user || role !== 'admin') return;
     refresh().catch(() => undefined);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user?.uid, role]);
 
   return (
     <RequireVerified>

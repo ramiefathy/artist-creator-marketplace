@@ -29,7 +29,7 @@ type ReportDoc = {
 };
 
 export default function AdminReportDetailPage() {
-  const { user } = useAuth();
+  const { user, loading, role } = useAuth();
   const params = useParams<{ id: string }>();
   const reportId = String(params?.id ?? '').trim();
 
@@ -56,9 +56,10 @@ export default function AdminReportDetailPage() {
   }
 
   useEffect(() => {
+    if (loading || !user || role !== 'admin') return;
     refresh().catch((e: any) => setErrMsg(e?.message ?? 'Failed to load report'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportId]);
+  }, [reportId, loading, user?.uid, role]);
 
   return (
     <RequireVerified>
@@ -256,4 +257,3 @@ export default function AdminReportDetailPage() {
     </RequireVerified>
   );
 }
-

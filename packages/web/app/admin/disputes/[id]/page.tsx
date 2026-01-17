@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthProvider';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { callAdminResolveDispute, callGetDisputeEvidenceUrls } from '@/lib/callables';
@@ -33,6 +34,7 @@ type Contract = {
 export default function AdminDisputeDetailPage({ params }: { params: { id: string } }) {
   const disputeId = params.id;
 
+  const { user, loading, role } = useAuth();
   const { pushToast } = useToast();
 
   const [dispute, setDispute] = useState<Dispute | null>(null);
@@ -56,9 +58,10 @@ export default function AdminDisputeDetailPage({ params }: { params: { id: strin
   }
 
   useEffect(() => {
+    if (loading || !user || role !== 'admin') return;
     refresh().catch((e: any) => setErrMsg(e?.message ?? 'Failed to load'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disputeId]);
+  }, [disputeId, loading, user?.uid, role]);
 
   const totalCents = contract?.pricing?.totalPriceCents ?? 0;
 

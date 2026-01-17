@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthProvider';
 import { RequireVerified } from '@/components/RequireVerified';
 import { RequireRole } from '@/components/RequireRole';
 import { Button, Card, Heading, Inline, Section, Stack, Text } from '@/design-system';
@@ -23,6 +24,7 @@ type ReportDoc = {
 };
 
 export default function AdminReportsPage() {
+  const { user, loading, role } = useAuth();
   const [items, setItems] = useState<ReportDoc[]>([]);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -32,8 +34,10 @@ export default function AdminReportsPage() {
   }
 
   useEffect(() => {
+    if (loading || !user || role !== 'admin') return;
     refresh().catch((e: any) => setErrMsg(e?.message ?? 'Failed to load reports'));
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user?.uid, role]);
 
   return (
     <RequireVerified>
@@ -79,4 +83,3 @@ export default function AdminReportsPage() {
     </RequireVerified>
   );
 }
-
