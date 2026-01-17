@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { isSocialEnabled } from '@/lib/flags';
 import { useAuth } from '@/components/AuthProvider';
@@ -25,10 +25,8 @@ export default function ExplorePage() {
     return async () => {
       const snaps = await getDocs(
         query(
-          collection(db, 'posts'),
-          where('visibility', '==', 'public'),
-          where('authorIsPrivateAccount', '==', false),
-          where('deletedAt', '==', null),
+          // Use a public projection so unsigned visitors (and crawlers) can browse without auth.
+          collection(db, 'publicPosts'),
           orderBy('createdAt', 'desc'),
           limit(50)
         )

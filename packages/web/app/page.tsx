@@ -100,10 +100,8 @@ async function SocialHubHome() {
   const [postSnap, campaignSnap, peopleSnap] = await Promise.all([
     getDocs(
       query(
-        collection(publicDb, 'posts'),
-        where('visibility', '==', 'public'),
-        where('authorIsPrivateAccount', '==', false),
-        where('deletedAt', '==', null),
+        // SEO-safe, public-read feed.
+        collection(publicDb, 'publicPosts'),
         orderBy('createdAt', 'desc'),
         limit(8)
       )

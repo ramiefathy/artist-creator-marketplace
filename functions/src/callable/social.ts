@@ -28,6 +28,30 @@ import { enforceRateLimit } from '../utils/rateLimit';
 import { assertNotBlocked } from '../utils/blocks';
 import { createNotification } from '../utils/notifications';
 
+function shouldIndexPublicPost(post: any): boolean {
+  if (!post) return false;
+  if (post.deletedAt) return false;
+  return post.visibility === 'public' && post.authorIsPrivateAccount === false;
+}
+
+function toPublicPostDoc(post: any): Record<string, unknown> {
+  return {
+    postId: String(post.postId ?? ''),
+    authorUid: String(post.authorUid ?? ''),
+    authorHandle: String(post.authorHandle ?? ''),
+    authorRoleLabel: String(post.authorRoleLabel ?? ''),
+    caption: String(post.caption ?? ''),
+    tags: Array.isArray(post.tags) ? post.tags : [],
+    visibility: 'public',
+    authorIsPrivateAccount: false,
+    media: Array.isArray(post.media) ? post.media : [],
+    likeCount: Number(post.likeCount ?? 0),
+    commentCount: Number(post.commentCount ?? 0),
+    createdAt: String(post.createdAt ?? ''),
+    updatedAt: String(post.updatedAt ?? '')
+  };
+}
+
 function isAnonymousProvider(req: any): boolean {
   const provider = (req?.auth?.token as any)?.firebase?.sign_in_provider;
   return provider === 'anonymous';
@@ -112,7 +136,16 @@ export const setAccountPrivacy = onCall({ region: 'us-central1' }, async (req) =
 
     const batch = db().batch();
     for (const doc of snap.docs) {
+      const post = doc.data() as any;
+      const next = { ...post, authorIsPrivateAccount: data.isPrivateAccount, updatedAt: now };
       batch.set(doc.ref, { authorIsPrivateAccount: data.isPrivateAccount, updatedAt: now }, { merge: true });
+
+      const publicRef = db().collection('publicPosts').doc(String(post.postId ?? doc.id));
+      if (shouldIndexPublicPost(next)) {
+        batch.set(publicRef, toPublicPostDoc(next));
+      } else {
+        batch.delete(publicRef);
+      }
     }
     await batch.commit();
     last = snap.docs[snap.docs.length - 1];
@@ -283,7 +316,16 @@ export const claimHandle = onCall({ region: 'us-central1' }, async (req) => {
 
         const batch = db().batch();
         for (const doc of snap.docs) {
+          const post = doc.data() as any;
+          const next = { ...post, authorHandle: handle, updatedAt: now };
           batch.set(doc.ref, { authorHandle: handle, updatedAt: now }, { merge: true });
+
+          const publicRef = db().collection('publicPosts').doc(String(post.postId ?? doc.id));
+          if (shouldIndexPublicPost(next)) {
+            batch.set(publicRef, toPublicPostDoc(next));
+          } else {
+            batch.delete(publicRef);
+          }
         }
         await batch.commit();
         last = snap.docs[snap.docs.length - 1];
@@ -421,7 +463,7 @@ export const createPost = onCall({ region: 'us-central1' }, async (req) => {
   const ref = db().collection('posts').doc();
   const postId = ref.id;
 
-  await ref.set({
+  const postDoc = {
     postId,
     authorUid: viewer.uid,
     authorHandle: viewer.handle,
@@ -436,7 +478,12 @@ export const createPost = onCall({ region: 'us-central1' }, async (req) => {
     commentCount: 0,
     createdAt: now,
     updatedAt: now
-  });
+  };
+
+  await ref.set(postDoc);
+  if (shouldIndexPublicPost(postDoc)) {
+    await db().collection('publicPosts').doc(postId).set(toPublicPostDoc(postDoc));
+  }
 
   return { ok: true, postId };
 });
@@ -479,6 +526,14 @@ export const updatePost = onCall({ region: 'us-central1' }, async (req) => {
     if (!hasChanges) err('INVALID_ARGUMENT', 'NO_CHANGES');
 
     tx.set(postRef, patch, { merge: true });
+
+    const next = { ...post, ...patch };
+    const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+    if (shouldIndexPublicPost(next)) {
+      tx.set(publicRef, toPublicPostDoc(next));
+    } else {
+      tx.delete(publicRef);
+    }
   });
 
   return { ok: true };
@@ -519,6 +574,9 @@ export const deletePost = onCall({ region: 'us-central1' }, async (req) => {
       },
       { merge: true }
     );
+
+    const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+    tx.delete(publicRef);
   });
 
   return { ok: true };
@@ -557,8 +615,16 @@ export const createComment = onCall({ region: 'us-central1' }, async (req) => {
       createdAt: now
     });
 
-    const current = Number((postSnap.data() as any).commentCount ?? 0);
-    tx.update(postRef, { commentCount: current + 1, updatedAt: now });
+    const post = postSnap.data() as any;
+    const current = Number(post.commentCount ?? 0);
+    const nextCount = current + 1;
+    tx.update(postRef, { commentCount: nextCount, updatedAt: now });
+
+    const next = { ...post, commentCount: nextCount, updatedAt: now };
+    if (shouldIndexPublicPost(next)) {
+      const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+      tx.set(publicRef, toPublicPostDoc(next));
+    }
   });
 
   if (viewer.uid !== authorUid) {
@@ -604,8 +670,16 @@ export const deleteComment = onCall({ region: 'us-central1' }, async (req) => {
     if (!canDelete) err('PERMISSION_DENIED', 'NOT_ALLOWED');
 
     tx.delete(commentRef);
-    const current = Number((postSnap.data() as any).commentCount ?? 0);
-    tx.update(postRef, { commentCount: Math.max(0, current - 1), updatedAt: now });
+    const post = postSnap.data() as any;
+    const current = Number(post.commentCount ?? 0);
+    const nextCount = Math.max(0, current - 1);
+    tx.update(postRef, { commentCount: nextCount, updatedAt: now });
+
+    const next = { ...post, commentCount: nextCount, updatedAt: now };
+    if (shouldIndexPublicPost(next)) {
+      const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+      tx.set(publicRef, toPublicPostDoc(next));
+    }
   });
 
   return { ok: true };
@@ -626,22 +700,37 @@ export const toggleLike = onCall({ region: 'us-central1' }, async (req) => {
     const [postSnap, likeSnap] = await Promise.all([tx.get(postRef), tx.get(likeRef)]);
     if (!postSnap.exists) err('NOT_FOUND', 'POST_NOT_FOUND');
 
-    const currentCount = Number((postSnap.data() as any).likeCount ?? 0);
+    const post = postSnap.data() as any;
+    const currentCount = Number(post.likeCount ?? 0);
 
     if (data.like) {
       if (!likeSnap.exists) {
+        const nextCount = currentCount + 1;
         tx.set(likeRef, { uid: viewer.uid, createdAt: now });
-        tx.update(postRef, { likeCount: currentCount + 1, updatedAt: now });
-        return { likeCount: currentCount + 1, created: true };
+        tx.update(postRef, { likeCount: nextCount, updatedAt: now });
+
+        const next = { ...post, likeCount: nextCount, updatedAt: now };
+        if (shouldIndexPublicPost(next)) {
+          const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+          tx.set(publicRef, toPublicPostDoc(next));
+        }
+        return { likeCount: nextCount, created: true };
       }
       return { likeCount: currentCount, created: false };
     }
 
     // unlike
     if (likeSnap.exists) {
+      const nextCount = Math.max(0, currentCount - 1);
       tx.delete(likeRef);
-      tx.update(postRef, { likeCount: Math.max(0, currentCount - 1), updatedAt: now });
-      return { likeCount: Math.max(0, currentCount - 1), created: false };
+      tx.update(postRef, { likeCount: nextCount, updatedAt: now });
+
+      const next = { ...post, likeCount: nextCount, updatedAt: now };
+      if (shouldIndexPublicPost(next)) {
+        const publicRef = db().collection('publicPosts').doc(String(post.postId ?? data.postId));
+        tx.set(publicRef, toPublicPostDoc(next));
+      }
+      return { likeCount: nextCount, created: false };
     }
     return { likeCount: currentCount, created: false };
   });

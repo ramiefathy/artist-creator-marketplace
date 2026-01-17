@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, setLogLevel } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, query, setDoc, setLogLevel } from 'firebase/firestore';
 
 const PROJECT_ID = 'demo-mcmp';
 
@@ -65,6 +65,30 @@ describe('Firestore rules (social + core)', () => {
 
     const anonDb = testEnv.unauthenticatedContext().firestore();
     await assertSucceeds(getDoc(doc(anonDb, 'publicCampaigns', 'c1')));
+  });
+
+  test('public can list publicPosts and cannot write them', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, 'publicPosts', 'p1'), {
+        postId: 'p1',
+        authorUid: 'a',
+        authorHandle: 'guest_amber_echo_0001',
+        authorRoleLabel: 'guest',
+        caption: 'hello',
+        tags: [],
+        visibility: 'public',
+        authorIsPrivateAccount: false,
+        likeCount: 0,
+        commentCount: 0,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      });
+    });
+
+    const anonDb = testEnv.unauthenticatedContext().firestore();
+    await assertSucceeds(getDocs(query(collection(anonDb, 'publicPosts'), limit(10))));
+    await assertFails(setDoc(doc(anonDb, 'publicPosts', 'p2'), { postId: 'p2' }));
   });
 
   test('public cannot read users/{uid} or creatorPrivate/{uid}', async () => {

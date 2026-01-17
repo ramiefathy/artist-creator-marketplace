@@ -71,11 +71,8 @@ export default async function PublicProfilePage({ params }: { params: { handle: 
     // SEO-safe: only render publicly readable posts.
     const snaps = await getDocs(
       query(
-        collection(publicDb, 'posts'),
+        collection(publicDb, 'publicPosts'),
         where('authorUid', '==', uid),
-        where('authorIsPrivateAccount', '==', false),
-        where('visibility', '==', 'public'),
-        where('deletedAt', '==', null),
         orderBy('createdAt', 'desc'),
         limit(50)
       )
